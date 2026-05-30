@@ -181,3 +181,8 @@ body {
   pointer-events: none;
   z-index: 1;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee { animation: none; }
+  * { scroll-behavior: auto !important; }
+}

@@ -10,6 +10,10 @@ export default function SquiggleLogo3D() {
   const data = useLoader(SVGLoader, "/squiggle-s.svg");
   const { pointer } = useThree();
 
+  const reduce =
+    typeof window !== "undefined" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
   const geometry = useMemo(() => {
     const shapes: THREE.Shape[] = [];
     for (const path of data.paths) {
@@ -30,7 +34,7 @@ export default function SquiggleLogo3D() {
 
   useFrame((_, delta) => {
     if (!group.current) return;
-    group.current.rotation.y += delta * 0.35;
+    if (!reduce) group.current.rotation.y += delta * 0.35;
     // subtle mouse parallax tilt
     group.current.rotation.x += (pointer.y * 0.25 - group.current.rotation.x) * 0.05;
     group.current.position.x += (pointer.x * 0.3 - group.current.position.x) * 0.05;
