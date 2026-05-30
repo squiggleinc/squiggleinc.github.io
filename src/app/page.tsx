@@ -1,14 +1,32 @@
 import ShaderBackground from "@/components/effects/ShaderBackground";
-import ShimmerButton from "@/components/effects/ShimmerButton";
+import { DeepDiveProvider } from "@/components/deepdive/DeepDiveContext";
+import ProjectDeepDive from "@/components/deepdive/ProjectDeepDive";
+import Nav from "@/components/sections/Nav";
+import Hero from "@/components/sections/Hero";
+import About from "@/components/sections/About";
+import TechStack from "@/components/sections/TechStack";
+import Projects from "@/components/sections/Projects";
+import Stats from "@/components/sections/Stats";
+import Timeline from "@/components/sections/Timeline";
+import Contact from "@/components/sections/Contact";
+import Footer from "@/components/sections/Footer";
 
 export default function Home() {
   return (
-    <main className="relative min-h-screen grid place-items-center">
+    <DeepDiveProvider>
       <ShaderBackground />
-      <div className="glass-card rounded-2xl p-10 text-center">
-        <h1 className="gradient-text text-5xl font-bold">Vincent Sarkis</h1>
-        <ShimmerButton className="mt-6">It works</ShimmerButton>
-      </div>
-    </main>
+      <Nav />
+      <main className="relative">
+        <Hero />
+        <About />
+        <TechStack />
+        <Projects />
+        <Stats />
+        <Timeline />
+        <Contact />
+      </main>
+      <Footer />
+      <ProjectDeepDive />
+    </DeepDiveProvider>
   );
 }
