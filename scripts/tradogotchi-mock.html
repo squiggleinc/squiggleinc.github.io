@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #07090c; --panel: #0e1319; --line: #1c2430;
+    --green: #34d399; --green-dim: #0f3a2e; --red: #f87171;
+    --purple: #a78bfa; --text: #e8edf2; --dim: #7d8794; --gold: #fbbf24;
+  }
+  html,body { width:1200px; height:750px; background:var(--bg); color:var(--text);
+    font-family: "Segoe UI", Inter, system-ui, sans-serif; overflow:hidden; }
+  .mono { font-family: "Consolas","SF Mono",ui-monospace,monospace; }
+  .app { width:1200px; height:750px; position:relative;
+    background:
+      radial-gradient(900px 500px at 78% -10%, rgba(52,211,153,.10), transparent 60%),
+      radial-gradient(700px 500px at 10% 120%, rgba(167,139,250,.10), transparent 60%),
+      var(--bg);
+    padding:34px 40px; display:flex; flex-direction:column; gap:22px; }
+  /* subtle grid */
+  .app::before { content:""; position:absolute; inset:0;
+    background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+    background-size:40px 40px; opacity:.18; pointer-events:none; }
+
+  .top { display:flex; align-items:center; justify-content:space-between; position:relative; z-index:1; }
+  .brand { display:flex; align-items:center; gap:14px; }
+  .logo { font-size:26px; font-weight:800; letter-spacing:.5px; }
+  .logo b { color:var(--green); }
+  .live { display:flex; align-items:center; gap:8px; font-size:13px; color:var(--green); }
+  .dot { width:9px; height:9px; border-radius:50%; background:var(--green); box-shadow:0 0 12px var(--green); }
+  .clock { font-size:14px; color:var(--dim); }
+
+  .body { display:grid; grid-template-columns: 1fr 320px; gap:24px; position:relative; z-index:1; flex:1; }
+
+  .card { background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.01));
+    border:1px solid var(--line); border-radius:20px; padding:26px 30px; }
+
+  .alert { display:flex; flex-direction:column; gap:20px; }
+  .alert-head { display:flex; align-items:center; gap:16px; }
+  .pair { font-size:46px; font-weight:800; letter-spacing:1px; }
+  .dir { display:inline-flex; align-items:center; gap:8px; font-size:22px; font-weight:800;
+    color:var(--green); padding:4px 14px; border:1px solid var(--green); border-radius:10px;
+    background:rgba(52,211,153,.08); }
+  .grade { margin-left:auto; font-size:30px; font-weight:900; color:#062014;
+    background:linear-gradient(135deg,var(--green),#a7f3d0); padding:6px 18px; border-radius:12px;
+    box-shadow:0 0 24px rgba(52,211,153,.45); }
+  .sub { font-size:14px; color:var(--dim); letter-spacing:.5px; }
+
+  .levels { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+  .lvl { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:14px 16px; }
+  .lvl .lab { font-size:11px; letter-spacing:2px; color:var(--dim); text-transform:uppercase; }
+  .lvl .val { font-size:24px; font-weight:700; margin-top:6px; }
+  .lvl .note { font-size:11px; color:var(--dim); margin-top:6px; line-height:1.35; }
+  .lvl.stop .val { color:var(--red); }
+  .lvl.t1 .val, .lvl.t2 .val { color:var(--green); }
+
+  .why { display:flex; flex-direction:column; gap:9px; }
+  .why .wlab { font-size:11px; letter-spacing:2px; color:var(--dim); text-transform:uppercase; }
+  .chk { display:flex; align-items:center; gap:10px; font-size:15px; }
+  .chk span { color:var(--green); font-weight:800; }
+  .meta { display:flex; gap:10px; margin-top:4px; }
+  .chip { font-size:12px; color:var(--text); border:1px solid var(--line); border-radius:999px; padding:5px 12px; }
+  .chip b { color:var(--green); }
+
+  /* PET panel */
+  .pet { display:flex; flex-direction:column; gap:18px; align-items:center; justify-content:flex-start;
+    background:linear-gradient(180deg,rgba(167,139,250,.06),rgba(255,255,255,.01)); }
+  .pet .pname { align-self:flex-start; font-size:11px; letter-spacing:2px; color:var(--dim); text-transform:uppercase; }
+  .creature { margin-top:6px; }
+  .mood { font-size:18px; font-weight:800; color:var(--green); letter-spacing:.5px; }
+  .moodsub { font-size:12px; color:var(--dim); margin-top:-8px; }
+  .bars { width:100%; display:flex; flex-direction:column; gap:12px; margin-top:6px; }
+  .bar .bl { display:flex; justify-content:space-between; font-size:11px; color:var(--dim); letter-spacing:1px; margin-bottom:5px; }
+  .track { height:9px; background:#0a0f14; border:1px solid var(--line); border-radius:999px; overflow:hidden; }
+  .fill { height:100%; border-radius:999px; }
+  .streak { width:100%; background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:14px;
+    text-align:center; }
+  .streak .big { font-size:30px; font-weight:800; color:var(--gold); }
+  .streak .sl { font-size:11px; letter-spacing:2px; color:var(--dim); text-transform:uppercase; margin-top:2px; }
+</style>
+</head>
+<body>
+  <div class="app">
+    <div class="top">
+      <div class="brand">
+        <div class="logo">TRADO<b>GOTCHI</b></div>
+        <div class="live"><span class="dot"></span> SIGNAL LIVE</div>
+      </div>
+      <div class="clock mono">09:42 AM PST &nbsp;·&nbsp; TradingView → webhook</div>
+    </div>
+
+    <div class="body">
+      <!-- ALERT -->
+      <div class="card alert">
+        <div class="alert-head">
+          <div class="pair mono">ES</div>
+          <div class="dir">▲ LONG</div>
+          <div class="grade">A+</div>
+        </div>
+        <div class="sub mono">MES · 1 CONTRACT &nbsp;·&nbsp; Entry zone 5,844 – 5,849 &nbsp;·&nbsp; 3m MACD flips green at zone</div>
+
+        <div class="levels">
+          <div class="lvl stop">
+            <div class="lab">Stop</div><div class="val mono">5,839.50</div>
+            <div class="note">2 ticks below IFVG zone low</div>
+          </div>
+          <div class="lvl t1">
+            <div class="lab">Target 1</div><div class="val mono">5,856.00</div>
+            <div class="note">1:1 R:R → move stop to BE</div>
+          </div>
+          <div class="lvl t2">
+            <div class="lab">Target 2</div><div class="val mono">5,865.50</div>
+            <div class="note">PDH — full exit</div>
+          </div>
+          <div class="lvl">
+            <div class="lab">Risk : Reward</div><div class="val mono">1 : 2.3</div>
+            <div class="note">ATR 6.2 · no news risk</div>
+          </div>
+        </div>
+
+        <div class="why">
+          <div class="wlab">Why this fired</div>
+          <div class="chk"><span>✓</span> ORB confirmed long</div>
+          <div class="chk"><span>✓</span> IFVG at prior-day high</div>
+          <div class="chk"><span>✓</span> 3m MACD flip green</div>
+          <div class="chk"><span>✓</span> VWAP reclaim</div>
+        </div>
+      </div>
+
+      <!-- PET -->
+      <div class="card pet">
+        <div class="pname">Your trading pet · “Pip”</div>
+        <svg class="creature" width="150" height="150" viewBox="0 0 150 150">
+          <defs>
+            <radialGradient id="g" cx="42%" cy="35%" r="70%">
+              <stop offset="0%" stop-color="#5eead4"/><stop offset="55%" stop-color="#34d399"/>
+              <stop offset="100%" stop-color="#0f766e"/>
+            </radialGradient>
+          </defs>
+          <ellipse cx="75" cy="135" rx="42" ry="8" fill="#000" opacity=".35"/>
+          <path d="M75 18 L83 30 L67 30 Z" fill="#34d399"/>
+          <circle cx="75" cy="13" r="6" fill="#a7f3d0"/>
+          <rect x="33" y="34" width="84" height="86" rx="34" fill="url(#g)"/>
+          <rect x="33" y="34" width="84" height="86" rx="34" fill="none" stroke="#a7f3d0" stroke-opacity=".5" stroke-width="2"/>
+          <circle cx="60" cy="72" r="9" fill="#04140f"/><circle cx="62" cy="69" r="3" fill="#fff"/>
+          <circle cx="92" cy="72" r="9" fill="#04140f"/><circle cx="94" cy="69" r="3" fill="#fff"/>
+          <path d="M58 94 Q75 108 94 94" fill="none" stroke="#04140f" stroke-width="4" stroke-linecap="round"/>
+          <circle cx="48" cy="88" r="6" fill="#fb7185" opacity=".5"/>
+          <circle cx="104" cy="88" r="6" fill="#fb7185" opacity=".5"/>
+        </svg>
+        <div class="mood">LOCKED IN 🔒</div>
+        <div class="moodsub">Pip is hyped — A+ setup detected</div>
+
+        <div class="bars">
+          <div class="bar">
+            <div class="bl"><span>FOCUS</span><span>92%</span></div>
+            <div class="track"><div class="fill" style="width:92%;background:linear-gradient(90deg,#34d399,#a7f3d0)"></div></div>
+          </div>
+          <div class="bar">
+            <div class="bl"><span>DISCIPLINE</span><span>78%</span></div>
+            <div class="track"><div class="fill" style="width:78%;background:linear-gradient(90deg,#a78bfa,#c4b5fd)"></div></div>
+          </div>
+        </div>
+        <div class="streak">
+          <div class="big mono">6 🔥</div>
+          <div class="sl">green-day streak</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
