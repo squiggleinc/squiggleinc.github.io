@@ -18,6 +18,7 @@ export const projects: Project[] = [
     ],
     tech: ["Next.js", "React", "TypeScript", "Tailwind", "Supabase", "Inngest", "Resend", "Claude AI"],
     image: "/projects/squiggle.png",
+    embed: "https://www.squigglenv.com/",
     link: { label: "Visit squigglenv.com", url: "https://squigglenv.com" },
   },
   {

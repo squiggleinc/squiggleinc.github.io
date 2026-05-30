@@ -38,13 +38,28 @@ export default function ProjectDeepDive() {
             <h2 className="font-display gradient-text mt-2 text-5xl font-light tracking-tight">{active.name}</h2>
             <p className="mt-2 text-lg text-[#c0c0c0]">{active.hook}</p>
 
-            <Image
-              src={active.image}
-              alt={`${active.name} screenshot`}
-              width={1200}
-              height={750}
-              className="mt-6 rounded-xl border border-[#1f1f1f]"
-            />
+            {active.embed ? (
+              <div className="mt-6">
+                <p className="mb-2 flex items-center gap-2 font-mono text-[11px] uppercase tracking-widest text-[#a78bfa]">
+                  <span className="inline-block h-2 w-2 rounded-full bg-[#a78bfa]" />
+                  Live — scroll &amp; click to interact
+                </p>
+                <iframe
+                  src={active.embed}
+                  title={`${active.name} live site`}
+                  className="h-[520px] w-full rounded-xl border border-[#1f1f1f] bg-black"
+                  loading="lazy"
+                />
+              </div>
+            ) : (
+              <Image
+                src={active.image}
+                alt={`${active.name} screenshot`}
+                width={1200}
+                height={750}
+                className="mt-6 rounded-xl border border-[#1f1f1f]"
+              />
+            )}
 
             <h3 className="mt-8 font-mono text-xs uppercase tracking-widest text-[#888888]">The idea</h3>
             <p className="mt-2 text-[#f0f0f0]/90">{active.problem}</p>

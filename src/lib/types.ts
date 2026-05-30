@@ -13,6 +13,7 @@ export interface Project {
   features: string[];    // what it does (deep-dive bullets)
   tech: string[];        // technologies
   image: string;         // /projects/<slug>.png
+  embed?: string;        // optional live URL to embed interactively in the deep-dive
   link?: ProjectLink;    // optional live/repo link
 }
 
