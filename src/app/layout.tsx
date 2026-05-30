@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Cormorant_Garamond } from "next/font/google";
+import { Geist, Geist_Mono, Cormorant_Garamond, Italiana } from "next/font/google";
 import "./globals.css";
 import SmoothScroll from "@/components/effects/SmoothScroll";
 
@@ -12,6 +12,12 @@ const display = Cormorant_Garamond({
   style: ["normal", "italic"],
   display: "swap",
 });
+const wordmark = Italiana({
+  variable: "--font-wordmark",
+  subsets: ["latin"],
+  weight: "400",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Vincent Sarkis — Founder & Creator",
@@ -21,7 +27,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} ${display.variable} h-full`}>
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} ${display.variable} ${wordmark.variable} h-full`}>
       <body className="min-h-full bg-black text-[#f0f0f0] antialiased overflow-x-hidden">
         <SmoothScroll>{children}</SmoothScroll>
       </body>

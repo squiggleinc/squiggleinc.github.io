@@ -21,7 +21,7 @@ function Counter({ value, suffix }: { value: number; suffix?: string }) {
     return () => cancelAnimationFrame(raf);
   }, [inView, value]);
   return (
-    <span ref={ref} className="gradient-text text-6xl font-bold">
+    <span ref={ref} className="font-display gradient-text text-7xl font-light">
       {n}{suffix ?? ""}
     </span>
   );

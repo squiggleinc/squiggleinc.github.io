@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { motion } from "framer-motion";
 import type { Project } from "@/lib/types";
 import { useDeepDive } from "@/components/deepdive/DeepDiveContext";
@@ -17,10 +18,19 @@ export default function ProjectCard({ project }: { project: Project }) {
         className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 transition-opacity group-hover:opacity-100"
         style={{ boxShadow: `0 0 40px ${project.accent}55` }}
       />
+      <div className="mb-5 overflow-hidden rounded-xl border border-[#1f1f1f]">
+        <Image
+          src={project.image}
+          alt={project.name}
+          width={1200}
+          height={750}
+          className="aspect-[16/10] w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+        />
+      </div>
       <p className="font-mono text-xs uppercase tracking-widest" style={{ color: project.accent }}>
         {project.status}
       </p>
-      <h3 className="mt-2 text-2xl font-bold text-white">{project.name}</h3>
+      <h3 className="font-display mt-2 text-3xl font-medium text-white">{project.name}</h3>
       <p className="mt-2 text-[#c0c0c0]">{project.hook}</p>
       <div className="mt-4 flex flex-wrap gap-2">
         {project.tech.slice(0, 4).map((t) => (

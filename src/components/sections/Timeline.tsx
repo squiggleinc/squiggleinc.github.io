@@ -6,7 +6,7 @@ export default function Timeline() {
     <section id="journey" className="relative mx-auto max-w-3xl px-6 py-28">
       <AnimateIn>
         <p className="font-mono text-xs uppercase tracking-widest text-[#a78bfa]">The journey</p>
-        <h2 className="gradient-text mt-2 text-4xl font-bold">Milestones</h2>
+        <h2 className="font-display gradient-text mt-2 text-5xl font-light tracking-tight">Milestones</h2>
       </AnimateIn>
       <div className="mt-12 space-y-8 border-l border-[#6d28d9]/40 pl-8">
         {profile.timeline.map((e, i) => (

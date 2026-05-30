@@ -19,6 +19,10 @@
   .font-display {
     font-family: var(--font-display), Georgia, serif;
   }
+
+  .font-wordmark {
+    font-family: var(--font-wordmark), Georgia, serif;
+  }
 }
 
 @theme inline {

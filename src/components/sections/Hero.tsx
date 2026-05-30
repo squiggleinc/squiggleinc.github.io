@@ -22,7 +22,7 @@ export default function Hero() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.35, type: "spring", bounce: 0.2 }}
-          className="gradient-text mt-4 text-6xl font-bold leading-none md:text-8xl"
+          className="font-display gradient-text mt-4 text-7xl font-light tracking-tight leading-[0.9] md:text-9xl"
         >
           {profile.name}
         </motion.h1>

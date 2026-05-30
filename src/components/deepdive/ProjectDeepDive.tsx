@@ -35,7 +35,7 @@ export default function ProjectDeepDive() {
             <p className="font-mono text-xs uppercase tracking-widest text-[#a78bfa]">
               {active.status}
             </p>
-            <h2 className="gradient-text mt-2 text-4xl font-bold">{active.name}</h2>
+            <h2 className="font-display gradient-text mt-2 text-5xl font-light tracking-tight">{active.name}</h2>
             <p className="mt-2 text-lg text-[#c0c0c0]">{active.hook}</p>
 
             <Image
