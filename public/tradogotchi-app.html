@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TradoGotchi</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background:#050f05;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  font-family:'Press Start 2P',monospace;
+  overflow:auto;
+  padding:24px 16px;
+  position:relative;
+}
+#matrix-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;opacity:0.5;}
+.kc-wrap{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;}
+.sparkle{display:none;}
+@keyframes tickS{0%{transform:translateX(100%);}100%{transform:translateX(-200%);}}
+.sparkle{position:fixed;pointer-events:none;animation:spk 4s ease-in-out infinite;font-size:18px;opacity:0;}
+@keyframes spk{0%,100%{opacity:0;transform:translateY(0) scale(.5);}50%{opacity:.5;transform:translateY(-18px) scale(1);}}
+.kc-wrap{display:flex;flex-direction:column;align-items:center;}
+.kc-ring{width:38px;height:38px;border:5px solid #aaa;border-radius:50%;margin-bottom:-3px;background:radial-gradient(circle at 38% 35%,#ddd,#888);box-shadow:0 2px 5px rgba(0,0,0,.5);animation:sway 4s ease-in-out infinite;z-index:3;position:relative;}
+@keyframes sway{0%,100%{transform:rotate(-2deg);}50%{transform:rotate(2deg);}}
+.kc-chain{width:5px;height:44px;background:linear-gradient(180deg,#888,#aaa 50%,#666);border-radius:2px;box-shadow:1px 0 2px rgba(0,0,0,.4);z-index:2;}
+.egg{
+  width:560px;
+  height:650px;
+  background:linear-gradient(145deg,#6ee67a 0%,#22c55e 35%,#16a34a 65%,#166534 100%);
+  border-radius:50% 50% 50% 50%/44% 44% 56% 56%;
+  position:relative;
+  box-shadow:inset 0 8px 22px rgba(255,255,255,.32),inset -5px -8px 18px rgba(0,0,0,.22),0 14px 44px rgba(0,0,0,.7),0 4px 10px rgba(0,180,0,.18);
+  animation:bob 3.2s ease-in-out infinite;
+}
+@keyframes bob{0%,100%{transform:translateY(0);}50%{transform:translateY(-5px);}}
+.egg::before{content:'';position:absolute;top:26px;left:68px;width:128px;height:90px;background:radial-gradient(ellipse,rgba(255,255,255,.42) 0%,transparent 68%);border-radius:50%;pointer-events:none;}
+.dots{position:absolute;inset:0;border-radius:inherit;overflow:hidden;pointer-events:none;}
+.dot{position:absolute;border-radius:50%;opacity:.5;}
+.brand{position:absolute;top:52px;left:50%;transform:translateX(-50%);z-index:10;text-align:center;pointer-events:none;}
+.brand-top{font-family:'Press Start 2P',monospace;font-size:13px;color:rgba(255,255,255,.98);letter-spacing:5px;white-space:nowrap;text-shadow:0 0 12px rgba(255,255,255,.7),0 2px 4px rgba(0,0,0,.7);font-weight:900;display:block;}
+.brand-sub{font-family:'Press Start 2P',monospace;font-size:8px;color:rgba(255,255,255,.7);letter-spacing:2px;white-space:nowrap;text-shadow:0 1px 3px rgba(0,0,0,.6);font-weight:700;display:block;margin-top:3px;}
+/* LCD bezel */
+.bezel{position:absolute;top:110px;left:50%;transform:translateX(-50%);width:390px;height:400px;background:linear-gradient(145deg,#2a3a2a,#1a2a1a);border-radius:22px;padding:11px;box-shadow:inset 0 3px 8px rgba(0,0,0,.8),0 0 0 4px rgba(255,255,255,.85),0 2px 8px rgba(0,0,0,.5);z-index:5;}
+.lcd{width:100%;height:100%;background:#8bac0f;border-radius:8px;position:relative;overflow:hidden;box-shadow:inset 0 2px 8px rgba(0,0,0,.55);}
+.lcd::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.07) 3px,rgba(0,0,0,.07) 4px);pointer-events:none;z-index:50;}
+/* Pages */
+.pg{display:none;position:absolute;inset:0;padding:5px;overflow:hidden;}
+.pg-scroll{overflow-y:auto;height:100%;padding-right:4px;scrollbar-width:thin;scrollbar-color:#306230 transparent;scroll-behavior:smooth;}
+.pg-scroll::-webkit-scrollbar{width:4px;}
+.pg-scroll::-webkit-scrollbar-track{background:transparent;}
+.pg-scroll::-webkit-scrollbar-thumb{background:#306230;border-radius:2px;}
+.pg.on{display:block;}
+/* GB color vars */
+:root{--p0:#0f380f;--p1:#306230;--p2:#8bac0f;--p3:#9bbc0f;}
+.c0{color:#0f380f;font-weight:700;}.c1{color:#306230;font-weight:600;}.c2{color:#8bac0f;}
+.vt{font-family:'VT323',monospace;}
+.px{font-family:'Press Start 2P',monospace;}
+/* Common UI bits */
+.back-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;padding-bottom:3px;border-bottom:1px solid #306230;}
+.back-btn{font-family:'Press Start 2P',monospace;font-size:16px;color:#306230;cursor:pointer;padding:4px 8px;border:1px solid #306230;border-radius:2px;}
+.back-btn:hover{background:#306230;color:#8bac0f;}
+.mkt-row{display:flex;align-items:center;justify-content:space-between;padding:6px 3px;border-bottom:1px solid rgba(15,56,15,.35);cursor:pointer;}
+.tag{font-family:'Press Start 2P',monospace;font-size:18px;font-weight:900;background:#306230;color:#0f380f;padding:4px 6px;border-radius:3px;min-width:36px;text-align:center;}
+.gtag{font-family:'Press Start 2P',monospace;font-size:18px;font-weight:900;padding:4px 6px;border-radius:3px;min-width:34px;text-align:center;}
+.ga{background:#0f380f;color:#8bac0f;}.gw{background:#306230;color:#9bbc0f;}.gn{background:rgba(15,56,15,.3);color:#306230;}
+.scell{background:rgba(15,56,15,.22);border:1px solid #306230;border-radius:3px;padding:6px 4px;text-align:center;}
+.pbar{height:9px;background:rgba(15,56,15,.25);border:1px solid #306230;border-radius:2px;overflow:hidden;margin-top:3px;}
+.pfill{height:100%;background:#0f380f;transition:width .8s;}
+.srow{display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid rgba(48,98,48,.35);}
+.srow:last-child{border-bottom:none;}
+.dcell{border:1px solid #306230;border-radius:2px;padding:4px;}
+.spip{font-family:'Press Start 2P',monospace;font-size:16px;text-align:center;padding:4px 0;border:1px solid #306230;border-radius:2px;}
+.spip.on{background:#0f380f;color:#8bac0f;}.spip.off{color:#306230;}
+.chrow{display:flex;align-items:flex-start;gap:7px;padding:5px 0;border-bottom:1px solid rgba(48,98,48,.28);cursor:pointer;}
+.chbox{width:17px;height:17px;border:2px solid #306230;border-radius:1px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;font-family:'Press Start 2P',monospace;color:#0f380f;}
+.chbox.done{background:#0f380f;}
+.trow{display:flex;align-items:center;justify-content:space-between;padding:6px 2px;border-bottom:1px solid rgba(48,98,48,.3);}
+.ptog{width:36px;height:15px;border:2px solid #306230;border-radius:7px;position:relative;cursor:pointer;transition:background .15s;}
+.ptog.on{background:#0f380f;}.ptog.off{background:transparent;}
+.ptog::after{content:'';position:absolute;width:11px;height:11px;border-radius:50%;background:#8bac0f;top:0px;transition:left .15s;}
+.ptog.on::after{left:22px;}.ptog.off::after{left:1px;}
+/* Alert page */
+.adirb{font-family:'Press Start 2P',monospace;font-size:18px;padding:5px 10px;border-radius:3px;border:2px solid #0f380f;}
+.along{background:#0f380f;color:#8bac0f;}
+.ashort{background:#306230;color:#0f380f;border-color:#0f380f;}
+.asec{border:1px solid #306230;border-radius:3px;padding:6px;margin-bottom:4px;background:rgba(15,56,15,.1);}
+.asec-t{font-family:'Press Start 2P',monospace;font-size:16px;color:#306230;letter-spacing:1px;margin-bottom:4px;}
+/* Brief scroll */
+.bscroll{overflow-y:auto;height:278px;padding-right:4px;scrollbar-width:thin;scrollbar-color:#306230 transparent;}
+.bscroll::-webkit-scrollbar{width:3px;}.bscroll::-webkit-scrollbar-thumb{background:#306230;}
+.bmh{display:flex;align-items:center;justify-content:space-between;padding:4px 3px;background:rgba(15,56,15,.28);border-radius:3px;margin-bottom:4px;}
+.gdot{width:12px;height:12px;border-radius:50%;background:#0f380f;box-shadow:0 0 4px #0f380f;flex-shrink:0;}
+.wdot{width:12px;height:12px;border-radius:50%;background:#306230;flex-shrink:0;}
+/* Buttons */
+.btn-row{position:absolute;bottom:42px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:32px;z-index:10;}
+.tbtn{width:58px;height:58px;border-radius:50%;border:4px solid rgba(0,0,0,.32);cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'Press Start 2P',monospace;font-size:10px;color:rgba(255,255,255,.9);user-select:none;transition:all .08s;box-shadow:0 5px 0 rgba(0,0,0,.38),inset 0 2px 0 rgba(255,255,255,.22);}
+.tbtn:active,.tbtn.pr{transform:translateY(4px);box-shadow:0 1px 0 rgba(0,0,0,.38);}
+.ba{background:radial-gradient(circle at 38% 32%,#e87777,#c0392b);}
+.bb{background:radial-gradient(circle at 38% 32%,#7bcf7b,#27ae60);}
+.bc{background:radial-gradient(circle at 38% 32%,#7faaed,#2980b9);}
+.lbl-row{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);display:flex;gap:32px;z-index:10;}
+.lbl{width:58px;text-align:center;font-family:'Press Start 2P',monospace;font-size:8px;color:rgba(255,255,255,.55);}
+/* Coin shower */
+.cshower{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999;overflow:hidden;}
+.coin{position:absolute;font-size:18px;animation:cdrop 1.4s ease-in forwards;top:-28px;}
+@keyframes cdrop{0%{transform:translateY(0) rotate(0);opacity:1;}100%{transform:translateY(105vh) rotate(540deg);opacity:0;}}
+/* Alert screen flash */
+@keyframes afl{0%,100%{background:#8bac0f;}50%{background:#9bbc0f;}}
+.afl{animation:afl .35s ease-in-out 4;}
+/* LCD alert ring */
+@keyframes aring{0%,100%{box-shadow:inset 0 2px 8px rgba(0,0,0,.55);}50%{box-shadow:inset 0 2px 8px rgba(0,0,0,.55),0 0 0 3px #0f380f,0 0 10px #0f380f;}}
+.aring{animation:aring .35s ease-in-out 4;}
+/* Alert scroll */
+.ascroll{overflow-y:auto;height:312px;padding-right:4px;scrollbar-width:thin;scrollbar-color:#306230 transparent;}
+.ascroll::-webkit-scrollbar{width:3px;}.ascroll::-webkit-scrollbar-thumb{background:#306230;}
+</style>
+</head>
+<body>
+<canvas id="matrix-canvas"></canvas>
+<div class="cshower" id="cshower"></div>
+
+<div class="kc-wrap">
+  <div class="kc-ring"></div>
+  <div class="kc-chain"></div>
+
+  <div class="egg" id="egg">
+    <!-- Goyard pattern overlay -->
+    <div class="dots"></div>
+    <div class="brand">
+      <span class="brand-top">TRADOGOTCHI</span>
+      <span class="brand-sub">★ TRADE LIKE A BEAST ★</span>
+    </div>
+
+    <!-- BEZEL + LCD -->
+    <div class="bezel">
+      <div class="lcd" id="lcd">
+
+        <!-- PAGE: MAIN -->
+        <div class="pg on" id="pgMain">
+          <div style="padding:4px;">
+
+            <!-- POKEMON GOLD STYLE SCENE -->
+            <div style="border:2px solid #306230;border-radius:4px;margin-bottom:4px;position:relative;overflow:hidden;height:80px;cursor:pointer;" onclick="mascotTap()">
+              <canvas id="iguanaCanvas" style="position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;" width="320" height="80"></canvas>
+              <!-- session + time overlay top-right -->
+              <div style="position:absolute;top:4px;right:6px;text-align:right;z-index:3;pointer-events:none;">
+                <div class="vt c0" id="sessLbl" style="font-size:18px;font-weight:900;line-height:1;text-shadow:1px 1px 0 #9bbc0f;">★ PRIME</div>
+                <div class="vt c1" id="clk" style="font-size:16px;font-weight:900;line-height:1;text-shadow:1px 1px 0 #9bbc0f;">07:14 PST</div>
+                <div class="vt c1" id="mMsg" style="font-size:14px;line-height:1;text-shadow:1px 1px 0 #9bbc0f;">WATCHING...</div>
+              </div>
+              <!-- scanlines -->
+              <div style="position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.05) 3px,rgba(0,0,0,0.05) 4px);pointer-events:none;z-index:4;"></div>
+            </div>
+            <!-- Market rows -->
+            <div class="mkt-row" onclick="goDetail('ES')">
+              <span class="tag">ES</span>
+              <span class="vt c0" id="pES" style="font-size:30px;font-weight:900;">5847</span>
+              <span class="vt c1" id="chES" style="font-size:18px;font-weight:900;">▲+12</span>
+              <span class="vt c1" id="bES" style="font-size:24px;font-weight:900;">▲LONG</span>
+              <span class="gtag ga" id="gES">A+</span>
+            </div>
+            <div class="mkt-row" onclick="goDetail('NQ')">
+              <span class="tag">NQ</span>
+              <span class="vt c0" id="pNQ" style="font-size:30px;font-weight:900;">20841</span>
+              <span class="vt c1" id="chNQ" style="font-size:18px;font-weight:900;">▲+47</span>
+              <span class="vt c1" id="bNQ" style="font-size:24px;font-weight:900;">▲LONG</span>
+              <span class="gtag gw" id="gNQ">WATCH</span>
+            </div>
+            <div class="mkt-row" onclick="goDetail('GC')">
+              <span class="tag">GC</span>
+              <span class="vt c0" id="pGC" style="font-size:30px;font-weight:900;">4501</span>
+              <span class="vt c1" id="chGC" style="font-size:18px;font-weight:900;">▼-8.2</span>
+              <span class="vt c1" id="bGC" style="font-size:24px;font-weight:900;">●ORB</span>
+              <span class="gtag gn" id="gGC">—</span>
+            </div>
+            <!-- Stats -->
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:2px;margin-top:3px;">
+              <div class="scell"><div class="vt c1" style="font-size:20px;">P&L</div><div class="vt c0" id="stPnl" style="font-size:22px;font-weight:900;">+$45</div></div>
+              <div class="scell"><div class="vt c1" style="font-size:22px;font-weight:900;">TRADES</div><div class="vt c0" style="font-size:22px;font-weight:900;">2/5</div></div>
+              <div class="scell"><div class="vt c1" style="font-size:22px;font-weight:900;">WIN%</div><div class="vt c0" style="font-size:22px;font-weight:900;">67%</div></div>
+              <div class="scell"><div class="vt c1" style="font-size:22px;font-weight:900;">ATR</div><div class="vt c0" style="font-size:22px;font-weight:900;">6.2</div></div>
+            </div>
+            <div class="pbar"><div class="pfill" style="width:45%;"></div></div>
+            <!-- Feed -->
+            <div style="border:1px solid #306230;border-radius:2px;padding:2px;margin-top:3px;">
+              <div class="vt c1" style="font-size:22px;font-weight:900;">◈ LOG</div>
+              <div id="feedLog"></div>
+            </div>
+            <!-- Ticker -->
+            <div style="border-top:1px solid #306230;margin-top:2px;overflow:hidden;white-space:nowrap;">
+              <span class="vt c0" style="font-size:22px;font-weight:900;display:inline-block;animation:tickS 22s linear infinite;">★ES LONG A+ @ 5,844–5,849 &nbsp; ★FOMC 11am PST — FLAT &nbsp; ★NQ IFVG 20,780 LONG &nbsp; ★GC ORB WAIT &nbsp;</span>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- PAGE: ALERT -->
+        <div class="pg" id="pgAlert">
+          <div style="padding:7px;height:100%;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#306230 transparent;display:flex;flex-direction:column;gap:4px;">
+
+            <!-- BUY / SELL BANNER -->
+            <div id="aBanner" style="border-radius:8px;padding:8px 10px;text-align:center;border:3px solid #0f380f;background:rgba(15,56,15,0.35);">
+              <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:3px;">
+                <span id="aEmoji" style="font-size:30px;">💰</span>
+                <div class="px c0" id="aActionWord" style="font-size:24px;font-weight:900;letter-spacing:3px;">BUY NOW</div>
+                <span id="aEmoji2" style="font-size:30px;">💰</span>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;">
+                <div class="px c0" id="aMkt" style="font-size:20px;font-weight:900;">ES</div>
+                <div class="vt c1" id="aCont" style="font-size:20px;font-weight:700;">MES · 1 CONTRACT</div>
+                <div class="adirb along" id="aDir">▲ LONG</div>
+              </div>
+              <div style="display:flex;justify-content:center;gap:12px;margin-top:3px;">
+                <div class="vt c1" id="aGrd" style="font-size:18px;font-weight:700;">GRADE: A+</div>
+                <div class="vt c1" id="aTime" style="font-size:18px;">07:14 PST</div>
+              </div>
+            </div>
+
+            <!-- ENTRY ZONE -->
+            <div style="background:rgba(15,56,15,0.4);border:2px solid #0f380f;border-radius:6px;padding:6px 10px;text-align:center;">
+              <div class="px c1" style="font-size:14px;letter-spacing:2px;margin-bottom:3px;">◈ ENTER PRICE ZONE</div>
+              <div class="vt c0" id="aEZ" style="font-size:36px;font-weight:900;line-height:1.1;">5,844 – 5,849</div>
+              <div class="vt c1" id="aTrig" style="font-size:18px;font-weight:700;">when 3m MACD flips green</div>
+            </div>
+
+            <!-- STOP + TARGET 1 -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">
+              <div style="background:rgba(30,0,0,0.4);border:2px solid #4a1010;border-radius:6px;padding:5px;text-align:center;">
+                <div class="px" style="font-size:14px;color:#7a3030;margin-bottom:2px;">✕ STOP LOSS</div>
+                <div class="vt" id="aSL" style="font-size:28px;font-weight:900;color:#6a2020;">5,839.50</div>
+                <div class="vt" id="aSLn" style="font-size:16px;font-weight:700;color:#7a3030;">below IFVG low</div>
+              </div>
+              <div style="background:rgba(0,20,0,0.4);border:2px solid #1a4a1a;border-radius:6px;padding:5px;text-align:center;">
+                <div class="px c1" style="font-size:14px;margin-bottom:2px;">✓ TARGET 1 (50%)</div>
+                <div class="vt c0" id="aT1" style="font-size:28px;font-weight:900;">5,856.00</div>
+                <div class="vt c1" id="aT1n" style="font-size:16px;font-weight:700;">→ move stop to BE</div>
+              </div>
+            </div>
+
+            <!-- TARGET 2 -->
+            <div style="background:rgba(0,25,0,0.4);border:2px solid #1a4a1a;border-radius:6px;padding:5px 10px;display:flex;align-items:center;justify-content:space-between;">
+              <div>
+                <div class="px c1" style="font-size:14px;">◎ TARGET 2 (50%)</div>
+                <div class="vt c1" id="aT2n" style="font-size:18px;font-weight:700;">PDH — full exit</div>
+              </div>
+              <div class="vt c0" id="aT2" style="font-size:32px;font-weight:900;">5,865.50</div>
+            </div>
+
+            <!-- METRICS -->
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;">
+              <div class="scell"><div class="vt c1" style="font-size:16px;font-weight:900;">R:R</div><div class="vt c0" id="aRR" style="font-size:24px;font-weight:900;">1:2.3</div></div>
+              <div class="scell"><div class="vt c1" style="font-size:16px;font-weight:900;">ATR</div><div class="vt c0" id="aATR" style="font-size:24px;font-weight:900;">6.2</div></div>
+              <div class="scell"><div class="vt c1" style="font-size:16px;font-weight:900;">RISK</div><div class="vt c0" style="font-size:24px;font-weight:900;">$10</div></div>
+            </div>
+
+            <!-- SIGNALS -->
+            <div style="border:1px solid #306230;border-radius:5px;padding:5px 8px;flex:1;">
+              <div class="px c1" style="font-size:14px;letter-spacing:1px;margin-bottom:3px;">◈ SIGNALS CONFIRMED</div>
+              <div class="vt c0" id="aWhy" style="font-size:18px;font-weight:700;line-height:1.6;">✓ ORB long confirmed</div>
+            </div>
+
+            <div id="aNews" class="vt c0" style="font-size:18px;font-weight:700;display:none;border:1px solid #306230;border-radius:3px;padding:4px;text-align:center;">⚠ NEWS NEARBY</div>
+
+            <div onclick="dismissAlert()" style="text-align:center;padding:8px;border:2px solid #0f380f;border-radius:5px;cursor:pointer;background:rgba(15,56,15,0.25);">
+              <span class="px c0" style="font-size:16px;font-weight:900;letter-spacing:2px;">[ ✓ NOTED — DISMISS ]</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- PAGE: BRIEF -->
+        <div class="pg" id="pgBrief">
+          <div style="padding:4px;">
+          <div class="back-row"><span class="px c0" style="font-size:18px;font-weight:900;">◈ MORNING BRIEF</span><span class="back-btn" onclick="goPage('Main')">◀ BACK</span></div>
+          <div class="bscroll">
+            <div class="bmh"><div class="gdot"></div><span class="px c0" style="font-size:18px;font-weight:900;">ES · LONG</span><span class="vt c1" style="font-size:24px;font-weight:900;">CLEAR</span></div>
+            <div class="vt c0" style="font-size:24px;font-weight:700;line-height:1.75;margin-bottom:5px;padding-left:3px;">
+              <span class="c1">ORB:</span> 5,831–5,849 (6:30am PST)<br>
+              <span class="c1">WATCH:</span> 5,838–5,842 IFVG@PDH<br>
+              <span class="c1">ENTER:</span> Long @ 5,838–5,842<br>
+              <span class="c1">TRIGGER:</span> 1m/3m MACD green+VWAP<br>
+              <span class="c1">STOP:</span> 5,834.50 (below IFVG low)<br>
+              <span class="c1">TGT1:</span> 5,852 → move stop to BE<br>
+              <span class="c1">TGT2:</span> 5,861 (overnight high)<br>
+              <span class="c1">INVALID:</span> break below 5,831
+            </div>
+            <div class="bmh"><div class="gdot"></div><span class="px c0" style="font-size:18px;font-weight:900;">NQ · LONG</span><span class="vt c1" style="font-size:24px;font-weight:900;">CLEAR</span></div>
+            <div class="vt c0" style="font-size:24px;font-weight:700;line-height:1.75;margin-bottom:5px;padding-left:3px;">
+              <span class="c1">ORB:</span> 20,798–20,867 (6:30am)<br>
+              <span class="c1">WATCH:</span> 20,780–20,800 IFVG+VWAP<br>
+              <span class="c1">ENTER:</span> Long @ 20,780–20,800<br>
+              <span class="c1">TRIGGER:</span> 3m MACD+delta bullish div<br>
+              <span class="c1">STOP:</span> 20,745 (MNQ — −35pts)<br>
+              <span class="c1">TGT1:</span> 20,840 → move stop to BE<br>
+              <span class="c1">TGT2:</span> 20,900 (prior session high)<br>
+              <span class="c1">INVALID:</span> break below 20,798
+            </div>
+            <div class="bmh" style="border:1px solid #306230;"><div class="wdot"></div><span class="px c1" style="font-size:18px;font-weight:900;">GC · WAIT</span><span class="vt c1" style="font-size:24px;font-weight:900;">CAUTION</span></div>
+            <div class="vt c0" style="font-size:24px;font-weight:700;line-height:1.75;margin-bottom:5px;padding-left:3px;">
+              <span class="c1">ORB:</span> Forming — wait 7:00am PST<br>
+              <span class="c1">WATCH:</span> 4,495–4,505 IFVG@PDL<br>
+              <span class="c1">DXY NOTE:</span> Dollar elevated — caution<br>
+              <span class="c1">IF LONG:</span> 4,495–4,500 / SL 4,490.5<br>
+              <span class="c1">IF SHORT:</span> 4,505–4,510 / SL 4,514.5<br>
+              <span class="c1">TARGET:</span> 1:2 min R:R to next S/R<br>
+              <span class="c0">⚠ NO GC until ORB confirmed</span>
+            </div>
+            <div style="border:1px solid #0f380f;border-radius:3px;padding:4px;background:rgba(15,56,15,.18);">
+              <div class="px c0" style="font-size:14px;margin-bottom:3px;">⚠ NO-FLY EVENTS TODAY</div>
+              <div class="vt c0" style="font-size:20px;line-height:1.7;">
+                11:00am PST — FOMC MINUTES<br>
+                <span class="c1">→ FLAT by 10:45am PST</span><br>
+                ✓ No NFP today<br>
+                ✓ No CPI today<br>
+                ✓ EIA: Wed 7:30am PST (CL)
+              </div>
+            </div>
+          </div>
+          </div>
+        </div>
+
+        <!-- PAGE: JOURNAL -->
+        <div class="pg" id="pgJournal">
+          <div style="padding:4px;height:100%;display:flex;flex-direction:column;">
+          <div class="back-row"><span class="px c0" style="font-size:18px;font-weight:900;">◈ TRADE LOG</span><span class="back-btn" onclick="goPage('Main')">◀ BACK</span></div>
+          <div class="pg-scroll" style="flex:1;">
+          <div id="jList">
+            <div style="display:grid;grid-template-columns:52px 38px 36px 1fr;gap:2px;padding:2px 0;border-bottom:1px solid rgba(48,98,48,.35);align-items:center;">
+              <span class="vt c1" style="font-size:24px;font-weight:700;">07:14</span>
+              <span class="vt c0" style="font-size:20px;font-weight:bold;">ES</span>
+              <span class="gtag ga" style="font-size:14px;">A+</span>
+              <span class="vt c0" style="font-size:20px;text-align:right;">+$22.50</span>
+            </div>
+            <div style="display:grid;grid-template-columns:52px 38px 36px 1fr;gap:2px;padding:2px 0;border-bottom:1px solid rgba(48,98,48,.35);align-items:center;">
+              <span class="vt c1" style="font-size:24px;font-weight:700;">07:41</span>
+              <span class="vt c0" style="font-size:20px;font-weight:bold;">NQ</span>
+              <span class="gtag" style="font-size:14px;background:#306230;color:#9bbc0f;">A</span>
+              <span class="vt c0" style="font-size:20px;text-align:right;">+$18.00</span>
+            </div>
+            <div style="display:grid;grid-template-columns:52px 38px 36px 1fr;gap:2px;padding:2px 0;border-bottom:1px solid rgba(48,98,48,.35);align-items:center;">
+              <span class="vt c1" style="font-size:24px;font-weight:700;">08:02</span>
+              <span class="vt c0" style="font-size:20px;font-weight:bold;">GC</span>
+              <span class="gtag ga" style="font-size:14px;">A+</span>
+              <span class="vt c1" style="font-size:20px;text-align:right;">-$10.00</span>
+            </div>
+          </div>
+          <div style="margin-top:6px;border-top:1px solid #306230;padding-top:4px;">
+            <div class="vt c0" style="font-size:20px;line-height:1.8;">TODAY: 3 trades · 2W/1L<br>WIN: 67% · R:R 1:2.1<br>NET: +$30.50</div>
+          </div>
+          </div><!-- /pg-scroll -->
+          </div>
+        </div>
+
+        <!-- PAGE: CHECKLIST -->
+        <div class="pg" id="pgChecklist">
+          <div style="padding:4px;height:100%;display:flex;flex-direction:column;">
+          <div class="back-row"><span class="px c0" style="font-size:18px;font-weight:900;">◈ PRE-MARKET</span><span class="back-btn" onclick="goPage('Main')">◀ BACK</span></div>
+
+          <!-- Scrollable checklist content -->
+          <div id="ckList" style="overflow-y:auto;flex:1;padding-right:4px;scrollbar-width:thin;scrollbar-color:#306230 transparent;">
+
+            <!-- ① CALENDAR & DAILY BIAS -->
+            <div style="background:rgba(15,56,15,0.35);border-left:3px solid #0f380f;padding:4px 8px;margin-bottom:4px;border-radius:0 4px 4px 0;">
+              <span class="px c0" style="font-size:14px;letter-spacing:1px;">① CALENDAR & BIAS</span>
+            </div>
+            <div style="border:1px solid rgba(48,98,48,0.4);border-radius:4px;padding:4px 8px;margin-bottom:4px;">
+              <div class="vt c1" style="font-size:18px;font-weight:700;line-height:1.5;">Do this the night before<br>or before 5:30am PST.</div>
+            </div>
+            <div class="chrow" onclick="chkToggle(this)"><div class="chbox"></div><span class="vt c0" style="font-size:22px;font-weight:700;">Check econ calendar (no-fly times)</span></div>
+            <div class="chrow" onclick="chkToggle(this)"><div class="chbox"></div><span class="vt c0" style="font-size:22px;font-weight:700;">Daily chart bias set — ES</span></div>
+            <div class="chrow" onclick="chkToggle(this)"><div class="chbox"></div><span class="vt c0" style="font-size:22px;font-weight:700;">Daily chart bias set — NQ</span></div>
+            <div class="chrow" onclick="chkToggle(this)"><div class="chbox"></div><span class="vt c0" style="font-size:22px;font-weight:700;">Daily chart bias set — GC</span></div>
+            <div class="chrow" onclick="chkToggle(this)"><div class="chbox"></div><span class="vt c0" style="font-size:22px;font-weight:700;">1–2 best markets picked for today</span></div>
+
+            <!-- ② MARK LIQUIDITY LEVELS -->
+            <div style="background:rgba(15,56,15,0.35);border-left:3px solid #0f380f;padding:4px 8px;margin:6px 0 4px;border-radius:0 4px 4px 0;">
+              <span class="px c0" style="font-size:14px;letter-spacing:1px;">② LIQUIDITY LEVELS</span>
+            </div>
+            <div style="border:1px solid rgba(48,98,48,0.4);border-radius:4px;padding:4px 8px;margin-bottom:4px;">
+              <div class="vt c1" style="font-size:18px;font-weight:700;line-height:1.5;">These are sweep targets.<br>Draw BEFORE 6:30am PST.</div>
+            </div>
+            <div class="chrow" onclick="chkToggle(this)"><div class="chbox"></div><span class="vt c0" style="font-size:22px;font-weight:700;">PDH marked yellow — ES NQ GC</span></div>
+            <div class="chrow" onclick="chkToggle(this)"><div class="chbox"></div><span class="vt c0" style="font-size:22px;font-weight:700;">PDL marked yellow — ES NQ GC</span></div>
+            <div class="chrow" onclick="chkToggle(this)"><div class="chbox"></div><span class="vt c0" style="font-size:22px;font-weight:700;">Asian Hi marked blue (12–6:30am)</span></div>
+            <div class="chrow" onclick="chkToggle(this)"><div class="chbox"></div><span class="vt c0" style="font-size:22px;font-weight:700;">Asian Lo marked blue (12–6:30am)</span></div>
+            <div class="chrow" onclick="chkToggle(this)"><div class="chbox"></div><span class="vt c0" style="font-size:22px;font-weight:700;">Equal highs / lows marked dashed</span></div>
+            <div class="chrow" onclick="chkToggle(this)"><div class="chbox"></div><span class="vt c0" style="font-size:22px;font-weight:700;">Round numbers noted (5800/5850...)</span></div>
+
+            <!-- ③ MARK IFVGs -->
+            <div style="background:rgba(15,56,15,0.35);border-left:3px solid #0f380f;padding:4px 8px;margin:6px 0 4px;border-radius:0 4px 4px 0;">
+              <span class="px c0" style="font-size:14px;letter-spacing:1px;">③ MARK IFVGs</span>
+            </div>
+            <div class="chrow" onclick="chkToggle(this)"><div class="chbox"></div><span class="vt c0" style="font-size:22px;font-weight:700;">IFVGs on 15m — ES</span></div>
+            <div class="chrow" onclick="chkToggle(this)"><div class="chbox"></div><span class="vt c0" style="font-size:22px;font-weight:700;">IFVGs on 15m — NQ</span></div>
+            <div class="chrow" onclick="chkToggle(this)"><div class="chbox"></div><span class="vt c0" style="font-size:22px;font-weight:700;">IFVGs on 15m — GC</span></div>
+            <div class="chrow" onclick="chkToggle(this)"><div class="chbox"></div><span class="vt c0" style="font-size:22px;font-weight:700;">Flag IFVGs sitting AT PDH or PDL</span></div>
+
+            <!-- ④ CHART SETUP -->
+            <div style="background:rgba(15,56,15,0.35);border-left:3px solid #0f380f;padding:4px 8px;margin:6px 0 4px;border-radius:0 4px 4px 0;">
+              <span class="px c0" style="font-size:14px;letter-spacing:1px;">④ CHART SETUP</span>
+            </div>
+            <div class="chrow" onclick="chkToggle(this)"><div class="chbox"></div><span class="vt c0" style="font-size:22px;font-weight:700;">All 4 timeframes open (15/5/3/1m)</span></div>
+            <div class="chrow" onclick="chkToggle(this)"><div class="chbox"></div><span class="vt c0" style="font-size:22px;font-weight:700;">VWAP loaded on 5m chart</span></div>
+            <div class="chrow" onclick="chkToggle(this)"><div class="chbox"></div><span class="vt c0" style="font-size:22px;font-weight:700;">Cumulative Delta on 5m</span></div>
+            <div class="chrow" onclick="chkToggle(this)"><div class="chbox"></div><span class="vt c0" style="font-size:22px;font-weight:700;">MACD 12/26/9 on 3m and 5m</span></div>
+
+            <!-- ⑤ SWEEP FILTER — Kyle's Rule -->
+            <div style="background:rgba(15,56,15,0.35);border-left:3px solid #0f380f;padding:4px 8px;margin:6px 0 4px;border-radius:0 4px 4px 0;">
+              <span class="px c0" style="font-size:14px;letter-spacing:1px;">⑤ SWEEP FILTER</span>
+            </div>
+            <div style="border:1px solid rgba(48,98,48,0.5);border-radius:4px;padding:6px 8px;margin-bottom:4px;background:rgba(15,56,15,0.2);">
+              <div class="vt c0" style="font-size:20px;font-weight:700;line-height:1.6;">
+                Before ANY entry:<br>
+                <span class="c1">Has PDH/PDL or Asian Hi/Lo<br>been swept and rejected?</span><br>
+                NO SWEEP = NO TRADE
+              </div>
+            </div>
+            <div class="chrow" onclick="chkToggle(this)"><div class="chbox"></div><span class="vt c0" style="font-size:22px;font-weight:700;">Sweep target level identified</span></div>
+            <div class="chrow" onclick="chkToggle(this)"><div class="chbox"></div><span class="vt c0" style="font-size:22px;font-weight:700;">Will wait for sweep + rejection</span></div>
+
+            <!-- ⑥ RISK RULES -->
+            <div style="background:rgba(15,56,15,0.35);border-left:3px solid #0f380f;padding:4px 8px;margin:6px 0 4px;border-radius:0 4px 4px 0;">
+              <span class="px c0" style="font-size:14px;letter-spacing:1px;">⑥ RISK RULES</span>
+            </div>
+            <div class="chrow" onclick="chkToggle(this)"><div class="chbox"></div><span class="vt c0" style="font-size:22px;font-weight:700;">Daily loss limit set ($50 max)</span></div>
+            <div class="chrow" onclick="chkToggle(this)"><div class="chbox"></div><span class="vt c0" style="font-size:22px;font-weight:700;">Risk pre-accepted ($10 = already gone)</span></div>
+            <div class="chrow" onclick="chkToggle(this)"><div class="chbox"></div><span class="vt c0" style="font-size:22px;font-weight:700;">Max 2 trades — stop after 2 losses</span></div>
+
+            <!-- ⑦ WAIT FOR ORB -->
+            <div style="background:rgba(15,56,15,0.35);border-left:3px solid #0f380f;padding:4px 8px;margin:6px 0 4px;border-radius:0 4px 4px 0;">
+              <span class="px c0" style="font-size:14px;letter-spacing:1px;">⑦ READY TO TRADE</span>
+            </div>
+            <div class="chrow" onclick="chkToggle(this)"><div class="chbox"></div><span class="vt c0" style="font-size:22px;font-weight:700;">ORB window closed — 7:00am PST</span></div>
+            <div class="chrow" onclick="chkToggle(this)"><div class="chbox"></div><span class="vt c0" style="font-size:22px;font-weight:700;">Bias confirmed above/below ORB</span></div>
+            <div class="chrow" onclick="chkToggle(this)"><div class="chbox"></div><span class="vt c0" style="font-size:22px;font-weight:700;">PRIME window open 7:00–8:00am PST</span></div>
+
+            <!-- bottom padding -->
+            <div style="height:16px;"></div>
+          </div>
+          </div>
+        </div>
+
+        <!-- PAGE: DETAIL -->
+        <div class="pg" id="pgDetail">
+          <div style="padding:4px;height:100%;display:flex;flex-direction:column;">
+          <div class="back-row"><span class="px c0" id="dtTitle" style="font-size:18px;font-weight:900;">ES DETAIL</span><span class="back-btn" onclick="goPage('Main')">◀ BACK</span></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:3px;border-bottom:1px solid #306230;margin-bottom:3px;">
+            <div><div class="vt c0" id="dtPrice" style="font-size:30px;font-weight:900;">5,847.5</div><div class="vt c1" id="dtChg" style="font-size:24px;font-weight:700;">▲ +12.5 pts</div></div>
+            <div style="text-align:right;"><div class="gtag ga" id="dtGrade" style="font-size:14px;display:inline-block;">A+</div><div class="vt c1" id="dtBias" style="font-size:20px;">▲ LONG</div></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:2px;margin-bottom:3px;">
+            <div class="spip on" id="spOrb">ORB✓</div>
+            <div class="spip on" id="spFvg">FVG✓</div>
+            <div class="spip on" id="spMac">MAC✓</div>
+            <div class="spip on" id="spVwp">VWP✓</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;margin-bottom:3px;">
+            <div class="dcell"><div class="vt c1" style="font-size:18px;">ENTRY ZONE</div><div class="vt c0" id="dtEZ" style="font-size:22px;">5,844–5,849</div></div>
+            <div class="dcell"><div class="vt c1" style="font-size:18px;">STOP</div><div class="vt c0" id="dtSL" style="font-size:22px;">5,839.50</div></div>
+            <div class="dcell"><div class="vt c1" style="font-size:18px;">TARGET 1</div><div class="vt c0" id="dtT1" style="font-size:22px;">5,856.00</div></div>
+            <div class="dcell"><div class="vt c1" style="font-size:18px;">TARGET 2</div><div class="vt c0" id="dtT2" style="font-size:22px;">5,865.50</div></div>
+            <div class="dcell"><div class="vt c1" style="font-size:18px;">ATR(5m)</div><div class="vt c0" id="dtATR" style="font-size:22px;font-weight:900;">6.2pts</div></div>
+            <div class="dcell"><div class="vt c1" style="font-size:18px;">R:R</div><div class="vt c0" id="dtRR" style="font-size:22px;">1:2.3</div></div>
+          </div>
+          <div style="border:1px solid #306230;border-radius:2px;padding:3px;"><div class="vt c1" style="font-size:18px;">NEWS</div><div class="vt c0" id="dtNews" style="font-size:20px;">CLEAR — FOMC 11am PST</div></div>
+          </div>
+        </div>
+
+        <!-- PAGE: SETTINGS -->
+        <div class="pg" id="pgSettings">
+          <div style="padding:4px;height:100%;display:flex;flex-direction:column;">
+          <div class="back-row"><span class="px c0" style="font-size:18px;font-weight:900;">◈ SETTINGS</span><span class="back-btn" onclick="goPage('Main')">◀ BACK</span></div>
+          <div class="pg-scroll" style="flex:1;"><div class="trow"><span class="vt c0" style="font-size:24px;font-weight:700;">Sound alerts</span><div class="ptog on" id="togSnd" onclick="togSet('Snd')"></div></div>
+          <div class="trow"><span class="vt c0" style="font-size:24px;font-weight:700;">Coin shower</span><div class="ptog on" id="togCoin" onclick="togSet('Coin')"></div></div>
+          <div class="trow"><span class="vt c0" style="font-size:24px;font-weight:700;">News filter</span><div class="ptog on" id="togNews" onclick="togSet('News')"></div></div>
+          <div class="trow"><span class="vt c0" style="font-size:24px;font-weight:700;">B-grade signals</span><div class="ptog off" id="togB" onclick="togSet('B')"></div></div>
+          <div style="margin-top:6px;border-top:1px solid #306230;padding-top:4px;">
+            <div class="vt c0" style="font-size:20px;line-height:1.9;">BROKER: NINJA DEMO<br>RISK/TRADE: $10 (1%)<br>DAILY LIMIT: $50<br>TARGET: $100<br>MKTS: ES · NQ · GC</div>
+          </div>
+          </div><!-- /pg-scroll -->
+          </div>
+        </div>
+
+      </div><!-- /lcd -->
+    </div><!-- /bezel -->
+
+    <!-- 3 BUTTONS -->
+    <div class="btn-row">
+      <div class="tbtn ba" id="btnA" onclick="onBtn('A')">A</div>
+      <div class="tbtn bb" id="btnB" onclick="onBtn('B')">B</div>
+      <div class="tbtn bc" id="btnC" onclick="onBtn('C')">C</div>
+    </div>
+    </div><!-- /egg -->
+</div><!-- /kc-wrap -->
+
+<script>
+// ── AUDIO ──
+let ac=null;
+function ga(){if(!ac)ac=new(window.AudioContext||window.webkitAudioContext)();return ac;}
+function playCC(){
+  try{const c=ga(),t=c.currentTime;
+  [[1200,2400,0,.08,.4],[1600,3200,.1,.08,.35],[880,880,.22,.05,.15]].forEach(([f1,f2,d,dr,g])=>{
+    const o=c.createOscillator(),gn=c.createGain();
+    o.connect(gn);gn.connect(c.destination);
+    o.type=d===.22?'square':'sine';
+    o.frequency.setValueAtTime(f1,t+d);
+    if(f2!==f1)o.frequency.exponentialRampToValueAtTime(f2,t+d+dr);
+    gn.gain.setValueAtTime(g,t+d);gn.gain.exponentialRampToValueAtTime(.001,t+d+dr+.25);
+    o.start(t+d);o.stop(t+d+dr+.3);
+  });}catch(e){}
+}
+function playClk(){
+  try{const c=ga(),t=c.currentTime,o=c.createOscillator(),g=c.createGain();
+  o.type='square';o.frequency.value=320;o.connect(g);g.connect(c.destination);
+  g.gain.setValueAtTime(.07,t);g.gain.exponentialRampToValueAtTime(.001,t+.04);
+  o.start(t);o.stop(t+.05);}catch(e){}
+}
+function playBoot(){
+  try{const c=ga(),t=c.currentTime;
+  [262,330,392,523,659].forEach((f,i)=>{
+    const o=c.createOscillator(),g=c.createGain();
+    o.type='square';o.frequency.value=f;o.connect(g);g.connect(c.destination);
+    g.gain.setValueAtTime(.09,t+i*.1);g.gain.exponentialRampToValueAtTime(.001,t+i*.1+.12);
+    o.start(t+i*.1);o.stop(t+i*.1+.15);
+  });}catch(e){}
+}
+
+// ── STATE ──
+const S={
+  page:'Main',alertActive:false,soundOn:true,coinsOn:true,menuCur:0,
+  mkts:{
+    ES:{price:5847.5,chg:12.5,bias:'LONG',grade:'A+',atr:6.2,ez:'5,844–5,849',sl:'5,839.50',t1:'5,856.00',t2:'5,865.50',rr:'1:2.3'},
+    NQ:{price:20841,chg:47,bias:'LONG',grade:'WATCH',atr:28.4,ez:'20,780–20,800',sl:'20,745',t1:'20,840',t2:'20,900',rr:'1:2.0'},
+    GC:{price:4501.5,chg:-8.2,bias:'ORB',grade:'—',atr:4.1,ez:'4,495–4,505',sl:'4,490.50',t1:'4,510.00',t2:'4,519.50',rr:'1:2.1'}
+  }
+};
+
+// ── PAGES ──
+const PAGES=['Main','Alert','Brief','Journal','Checklist','Detail','Settings'];
+function goPage(name){
+  PAGES.forEach(p=>{
+    const el=document.getElementById('pg'+p);
+    if(el) el.classList.toggle('on',p===name);
+  });
+  S.page=name;
+}
+
+// ── MENU CYCLING ──
+const MENU=['Brief','Journal','Checklist','Settings'];
+let mIdx=0;
+
+// ── BUTTONS ──
+function onBtn(btn){
+  playClk();
+  flashBtn(btn);
+  // If alert is showing, any button dismisses
+  if(S.page==='Alert'){dismissAlert();return;}
+  if(btn==='A'){
+    // Fire alert
+    fireAlert(ALERTS[Math.floor(Math.random()*ALERTS.length)]);
+  } else if(btn==='B'){
+    // Cycle menu
+    if(S.page==='Main'){
+      mIdx=(mIdx+1)%MENU.length;
+      goPage(MENU[mIdx]);
+    } else {
+      goPage('Main');
+    }
+  } else if(btn==='C'){
+    // Back
+    if(S.page!=='Main') goPage('Main');
+    else goPage('Brief');
+  }
+}
+
+function flashBtn(id){
+  const el=document.getElementById('btn'+id);
+  el.classList.add('pr');
+  setTimeout(()=>el.classList.remove('pr'),120);
+}
+
+// ── DETAIL ──
+function goDetail(mkt){
+  playClk();
+  const m=S.mkts[mkt];
+  document.getElementById('dtTitle').textContent=mkt+' DETAIL';
+  document.getElementById('dtPrice').textContent=m.price.toFixed(1);
+  document.getElementById('dtChg').textContent=(m.chg>=0?'▲ +':'▼ ')+Math.abs(m.chg).toFixed(1)+' pts';
+  document.getElementById('dtGrade').textContent=m.grade;
+  document.getElementById('dtBias').textContent=m.bias==='LONG'?'▲ LONG':m.bias==='SHORT'?'▼ SHORT':'● ORB';
+  document.getElementById('dtEZ').textContent=m.ez;
+  document.getElementById('dtSL').textContent=m.sl;
+  document.getElementById('dtT1').textContent=m.t1;
+  document.getElementById('dtT2').textContent=m.t2;
+  document.getElementById('dtATR').textContent=m.atr+'pts';
+  document.getElementById('dtRR').textContent=m.rr;
+  const active=m.grade==='A+'?4:m.grade==='A'?3:m.grade==='WATCH'?2:1;
+  [{id:'spOrb',lbl:'ORB'},{id:'spFvg',lbl:'FVG'},{id:'spMac',lbl:'MAC'},{id:'spVwp',lbl:'VWP'}].forEach(({id,lbl},i)=>{
+    const el=document.getElementById(id);
+    el.className='spip '+(i<active?'on':'off');
+    el.textContent=lbl+(i<active?'✓':'…');
+  });
+  goPage('Detail');
+}
+
+// ── ALERTS ──
+const ALERTS=[
+  {mkt:'ES',dir:'LONG',cont:'MES · 1 CONTRACT',grade:'A+',
+   ez:'5,844–5,849',trig:'1m/3m MACD flips green at zone',
+   sl:'5,839.50',sln:'2 ticks below IFVG zone low',
+   t1:'5,856.00',t1n:'1:1 R:R → move stop to breakeven',
+   t2:'5,865.50',t2n:'PDH — full exit',
+   why:'✓ ORB confirmed long bias\n✓ IFVG at prior day high\n✓ 3m MACD histogram flip green\n✓ VWAP reclaim + delta bull div',
+   rr:'1:2.3',atr:'6.2',news:false},
+  {mkt:'NQ',dir:'LONG',cont:'MNQ · 1 CONTRACT',grade:'A+',
+   ez:'20,780–20,800',trig:'3m MACD flip + delta bullish div',
+   sl:'20,745',sln:'below IFVG zone low (−35 pts)',
+   t1:'20,840',t1n:'1:1 R:R → move stop to breakeven',
+   t2:'20,900',t2n:'prior session high — full exit',
+   why:'✓ ORB breakout long confirmed\n✓ IFVG at VWAP confluence zone\n✓ 3m MACD positive histogram flip\n✓ Delta: higher low absorption',
+   rr:'1:2.0',atr:'28.4',news:false},
+  {mkt:'GC',dir:'LONG',cont:'MGC · 1 CONTRACT',grade:'A',
+   ez:'4,495–4,502',trig:'5m MACD curl + close above VWAP',
+   sl:'4,490.50',sln:'2 ticks below IFVG zone low',
+   t1:'4,510.00',t1n:'1:1.5 R:R → trail stop up',
+   t2:'4,519.50',t2n:'overnight high + round number',
+   why:'✓ London/NY overlap IFVG hit\n✓ 5m MACD bullish divergence\n✓ VWAP support holding firm\n✗ DXY elevated — 1 contract only',
+   rr:'1:2.1',atr:'4.1',news:false},
+  {mkt:'ES',dir:'SHORT',cont:'MES · 1 CONTRACT',grade:'A+',
+   ez:'5,862–5,867',trig:'3m MACD red flip + VWAP rejection',
+   sl:'5,871.50',sln:'2 ticks above IFVG zone high',
+   t1:'5,851.00',t1n:'1:1.2 R:R → move stop to breakeven',
+   t2:'5,838.00',t2n:'PDH area / VWAP — full exit',
+   why:'✓ ORB short bias confirmed (break below)\n✓ Bearish IFVG at overnight high\n✓ 3m MACD bearish divergence active\n✓ Delta distribution into rally',
+   rr:'1:2.5',atr:'7.1',news:false},
+  {mkt:'NQ',dir:'SHORT',cont:'MNQ · 1 CONTRACT',grade:'A',
+   ez:'20,900–20,920',trig:'1m/3m MACD red + delta bear div',
+   sl:'20,948',sln:'above weekly S/R level',
+   t1:'20,860',t1n:'1:1 R:R → move stop to breakeven',
+   t2:'20,800',t2n:'VWAP + ORB high — scale out',
+   why:'✓ Bearish IFVG at weekly resistance\n✓ 3m MACD bearish histogram forming\n✓ Delta: selling into higher price\n✗ 2/4 steps — size half only',
+   rr:'1:2.2',atr:'31.0',news:true},
+  {mkt:'GC',dir:'SHORT',cont:'MGC · 1 CONTRACT',grade:'A+',
+   ez:'4,508–4,514',trig:'5m MACD red flip + DXY strength',
+   sl:'4,518.00',sln:'above bearish IFVG zone high',
+   t1:'4,498.00',t1n:'1:1 R:R → move stop to breakeven',
+   t2:'4,484.50',t2n:'PDL + S/R cluster — full exit',
+   why:'✓ ORB short confirmed (broke below)\n✓ Bearish IFVG at DXY level\n✓ 5m MACD deep red histogram\n✓ London session high = resistance',
+   rr:'1:2.4',atr:'4.8',news:false}
+];
+
+function fireAlert(data){
+  if(S.alertActive)return;
+  S.alertActive=true;
+  const long=data.dir==='LONG';
+  document.getElementById('aEmoji').textContent=long?'💰':'💸';
+  document.getElementById('aEmoji2').textContent=long?'💰':'💸';
+  document.getElementById('aActionWord').textContent=long?'BUY NOW':'SELL NOW';
+  document.getElementById('aActionWord').style.color=long?'#0f380f':'#3a0000';
+  const banner=document.getElementById('aBanner');
+  banner.style.background=long?'rgba(15,56,15,0.4)':'rgba(50,5,5,0.4)';
+  banner.style.borderColor=long?'#0f380f':'#5a1a1a';
+  document.getElementById('aMkt').textContent=data.mkt;
+  document.getElementById('aCont').textContent=data.cont;
+  const dir=document.getElementById('aDir');
+  dir.textContent=long?'▲ LONG':'▼ SHORT';
+  dir.className='adirb '+(long?'along':'ashort');
+  document.getElementById('aGrd').textContent='GRADE: '+data.grade;
+  const pst=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Los_Angeles'}));
+  document.getElementById('aTime').textContent=String(pst.getHours()).padStart(2,'0')+':'+String(pst.getMinutes()).padStart(2,'0')+' PST';
+  document.getElementById('aEZ').textContent=data.ez;
+  document.getElementById('aTrig').textContent=data.trig;
+  document.getElementById('aSL').textContent=data.sl;
+  document.getElementById('aSLn').textContent=data.sln;
+  document.getElementById('aT1').textContent=data.t1;
+  document.getElementById('aT1n').textContent=data.t1n;
+  document.getElementById('aT2').textContent=data.t2;
+  document.getElementById('aT2n').textContent=data.t2n;
+  document.getElementById('aWhy').innerHTML=data.why.split('\n').join('<br>');
+  document.getElementById('aRR').textContent=data.rr;
+  document.getElementById('aATR').textContent=data.atr;
+  document.getElementById('aNews').style.display=data.news?'block':'none';
+  goPage('Alert');
+  document.getElementById('pgAlert').classList.add('afl');
+  setTimeout(()=>document.getElementById('pgAlert').classList.remove('afl'),1500);
+  document.getElementById('lcd').classList.add('aring');
+  setTimeout(()=>document.getElementById('lcd').classList.remove('aring'),1500);
+  // Pixel iguana alert
+  iguanaAlert();
+  // Feed
+  addFeed(data,pst);
+  if(S.soundOn)playCC();
+  if(S.coinsOn)showCoins();
+}
+
+function dismissAlert(){
+  S.alertActive=false;
+  C.fireMode=false;
+  goPage('Main');
+}
+
+function addFeed(data,pst){
+  const t=String(pst.getHours()).padStart(2,'0')+':'+String(pst.getMinutes()).padStart(2,'0');
+  const d=document.createElement('div');
+  d.className='vt c0';d.style.fontSize='12px';d.style.borderBottom='1px solid rgba(48,98,48,.3)';d.style.padding='1px 0';
+  d.textContent=`${t} ${data.dir==='LONG'?'▲':'▼'} ${data.mkt} [${data.grade}] ${data.ez}`;
+  const fl=document.getElementById('feedLog');
+  fl.insertBefore(d,fl.firstChild);
+  while(fl.children.length>3)fl.removeChild(fl.lastChild);
+}
+
+// ── COINS ──
+function showCoins(){
+  const s=document.getElementById('cshower'),emj=['💰','🪙','💵','💴'];
+  for(let i=0;i<10;i++){
+    setTimeout(()=>{
+      const c=document.createElement('div');c.className='coin';
+      c.textContent=emj[Math.floor(Math.random()*emj.length)];
+      c.style.left=Math.random()*100+'vw';c.style.animationDuration=(1+Math.random()*.8)+'s';
+      s.appendChild(c);setTimeout(()=>c.remove(),2200);
+    },i*100);
+  }
+}
+
+// ── CHINESE DRAGON SCENE v3 ──
+const C = {
+  tick: 0,
+  segs: [],          // body segments
+  glitters: [],      // body shimmer particles
+  sparks: [],        // fire/sparkle particles
+  clouds: [
+    {x:310, y:12, w:50, spd:0.16},
+    {x:140, y:20, w:36, spd:0.11},
+    {x:220, y:7,  w:28, spd:0.19},
+    {x: 30, y:17, w:22, spd:0.13}
+  ],
+  fireMode: false,
+  fireTick: 0,
+  alertMode: false
+};
+
+// GB 4-color palette
+const GB = {
+  sky:   '#9bbc0f',
+  sky2:  '#8bac0f',
+  mid:   '#306230',
+  dark:  '#0f380f',
+  lite:  '#c8d840',
+  cloud: '#a8b808'
+};
+
+// Init 50 body segments off-screen left
+(function(){
+  for(let i=0;i<50;i++){
+    C.segs.push({ x:-i*9-20, y:38, px:0, py:0 });
+  }
+})();
+
+function px(ctx,x,y,w,h){ ctx.fillRect(Math.round(x),Math.round(y),w,h); }
+
+// ─── TRADITIONAL DRAGON HEAD ───────────────────────────────────────────────
+// Faces RIGHT. Built from individual pixel rects so it looks hand-drawn.
+function drawHead(ctx, x, y, fireMode){
+  const d = GB.dark, m = GB.mid, l = GB.lite;
+
+  // ── Main skull block ──
+  ctx.fillStyle=d;
+  px(ctx, x-4, y-7, 18, 13);  // skull
+
+  // ── Snout extends right ──
+  px(ctx, x+14, y-4, 10, 7);  // snout bridge
+  px(ctx, x+24, y-3, 6, 5);   // snout tip
+
+  // ── Lower jaw (slightly offset down) ──
+  px(ctx, x+8, y+4, 18, 5);   // lower jaw
+  px(ctx, x+26, y+5, 4, 3);   // chin
+
+  // ── Teeth / fang ──
+  ctx.fillStyle=l;
+  px(ctx, x+22, y+3, 2, 4);   // upper fang
+  px(ctx, x+26, y+7, 2, 3);   // lower tooth
+
+  // ── Eye ──
+  ctx.fillStyle=l;
+  px(ctx, x+4, y-4, 5, 5);    // eye white glow
+  ctx.fillStyle=d;
+  px(ctx, x+5, y-3, 3, 3);    // pupil
+  ctx.fillStyle=l;
+  px(ctx, x+5, y-3, 1, 1);    // eye shine
+
+  // ── Nostril ──
+  ctx.fillStyle=m;
+  px(ctx, x+22, y-1, 2, 2);
+
+  // ── Brow ridge ──
+  ctx.fillStyle=d;
+  px(ctx, x+2, y-9, 10, 2);   // brow
+  px(ctx, x+2, y-11, 4, 2);   // brow peak
+
+  // ── Horns (two curved horns) ──
+  ctx.fillStyle=d;
+  px(ctx, x-2, y-12, 3, 6);   // left horn base
+  px(ctx, x-4, y-16, 3, 5);   // left horn tip
+  px(ctx, x+4, y-14, 3, 7);   // right horn base
+  px(ctx, x+6, y-18, 3, 6);   // right horn tip
+  // horn highlight
+  ctx.fillStyle=m;
+  px(ctx, x-3, y-15, 1, 3);
+  px(ctx, x+5, y-17, 1, 4);
+
+  // ── Long whiskers (antennae) ──
+  ctx.fillStyle=m;
+  // whisker 1 curving up-right from snout
+  px(ctx, x+24, y-4, 8, 1);
+  px(ctx, x+32, y-6, 6, 1);
+  px(ctx, x+38, y-9, 5, 1);
+  px(ctx, x+43, y-12, 4, 1);
+  // whisker 2 curving down-right
+  px(ctx, x+24, y+1, 8, 1);
+  px(ctx, x+32, y+3, 6, 1);
+  px(ctx, x+38, y+5, 4, 1);
+  // whisker dots at tips
+  ctx.fillStyle=l;
+  px(ctx, x+47, y-13, 2, 2);
+  px(ctx, x+42, y+5, 2, 2);
+
+  // ── Dragon beard (chin tendrils) ──
+  ctx.fillStyle=m;
+  px(ctx, x+16, y+8, 2, 5);
+  px(ctx, x+14, y+12, 2, 4);
+  px(ctx, x+20, y+8, 2, 6);
+  px(ctx, x+22, y+13, 2, 3);
+  // beard tips
+  ctx.fillStyle=d;
+  px(ctx, x+14, y+15, 2, 2);
+  px(ctx, x+22, y+15, 2, 2);
+
+  // ── FIRE BREATH ──
+  if(fireMode){
+    // core white-hot
+    ctx.fillStyle='#d0e080';
+    px(ctx, x+30, y, 12, 4);
+    px(ctx, x+42, y-1, 10, 6);
+    // orange/mid flame
+    ctx.fillStyle=GB.lite;
+    px(ctx, x+32, y-3, 8, 2);
+    px(ctx, x+40, y-4, 12, 3);
+    px(ctx, x+52, y-2, 10, 7);
+    // outer dark smoke edge
+    ctx.fillStyle=GB.mid;
+    px(ctx, x+44, y-7, 8, 3);
+    px(ctx, x+54, y-6, 14, 3);
+    px(ctx, x+62, y-3, 12, 9);
+    px(ctx, x+54, y+5, 18, 4);
+    // flickering embers
+    const t = C.tick;
+    ctx.fillStyle=GB.dark;
+    if(t%4<2){ px(ctx, x+68, y-8, 3, 3); }
+    if(t%6<3){ px(ctx, x+74, y+2, 3, 3); }
+    if(t%5<2){ px(ctx, x+72, y-4, 2, 2); }
+  }
+}
+
+// ─── WING (drawn at segment ~8 from head) ──────────────────────────────────
+function drawWing(ctx, x, y, tick, side){
+  // side: 1=top, -1=bottom
+  // Wing flap driven by sine wave
+  const flap = Math.sin(tick * 0.12) * 8;
+  const wy = y + side * (10 + flap);
+  const s = side;
+
+  ctx.fillStyle = GB.dark;
+  // Wing root connector
+  px(ctx, x-2, y + s*4, 6, 4);
+  // Primary wing membrane (3 panels)
+  px(ctx, x-4,  wy + s*0,  14, 3);
+  px(ctx, x-6,  wy + s*3,  18, 3);
+  px(ctx, x-4,  wy + s*6,  12, 3);
+  // Wing tip
+  px(ctx, x+8,  wy + s*0,   4, 2);
+  px(ctx, x+10, wy + s*3,   4, 2);
+  px(ctx, x+8,  wy + s*6,   3, 2);
+  // Wing bone lines (lighter)
+  ctx.fillStyle = GB.mid;
+  px(ctx, x-3, wy + s*1, 12, 1);
+  px(ctx, x-5, wy + s*4, 16, 1);
+  px(ctx, x-3, wy + s*7,  8, 1);
+}
+
+// ─── BODY SEGMENT ──────────────────────────────────────────────────────────
+function drawBodySeg(ctx, x, y, r, idx){
+  ctx.fillStyle = GB.dark;
+  px(ctx, x-r, y-r, r*2, r*2);
+  // scale pattern — alternating highlight squares
+  if(idx % 2 === 0){
+    ctx.fillStyle = GB.mid;
+    px(ctx, x-r+1, y-r+1, r-1, r-1);
+  }
+  // belly lighter band every 4
+  if(idx % 4 === 0){
+    ctx.fillStyle = GB.mid;
+    px(ctx, x-r+1, y, r*2-2, 2);
+  }
+}
+
+// ─── SPINE CREST ───────────────────────────────────────────────────────────
+function drawSpine(ctx, x, y, idx){
+  if(idx % 3 !== 0 || idx < 2 || idx > 42) return;
+  const h = (idx < 10 || idx > 38) ? 3 : 5; // taller in middle
+  ctx.fillStyle = GB.dark;
+  px(ctx, x-1, y-8, 3, h);
+  ctx.fillStyle = GB.mid;
+  px(ctx, x, y-7, 1, h-1);
+}
+
+// ─── CLOUD ─────────────────────────────────────────────────────────────────
+function drawCloud(ctx, x, y, w){
+  ctx.fillStyle = GB.cloud;
+  px(ctx, x+4, y, w-8, 7);
+  px(ctx, x, y+4, w, 5);
+  px(ctx, x+8, y-4, w-16, 5);
+  ctx.fillStyle = GB.sky;
+  px(ctx, x+8, y-4, w-16, 1);
+  px(ctx, x+4, y, w-8, 1);
+}
+
+// ─── GLITTER PARTICLE ──────────────────────────────────────────────────────
+function spawnGlitter(x, y, fireMode){
+  C.glitters.push({
+    x: x + (Math.random()-0.5)*16,
+    y: y + (Math.random()-0.5)*12,
+    life: fireMode ? 22 + Math.floor(Math.random()*18) : 14 + Math.floor(Math.random()*10),
+    size: fireMode ? 2+Math.floor(Math.random()*2) : 1,
+    vx: (Math.random()-0.5)*(fireMode?2:0.8),
+    vy: (Math.random()-0.5)*(fireMode?2:0.6) - (fireMode?0.5:0),
+    fire: fireMode
+  });
+}
+
+// ─── MAIN LOOP ──────────────────────────────────────────────────────────────
+function sceneLoop(){
+  const cv = document.getElementById('iguanaCanvas');
+  if(!cv) return;
+  const ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height;
+  C.tick++;
+
+  // ── BACKGROUND ──
+  const g = ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,  '#8bac0f');
+  g.addColorStop(0.45,'#9bbc0f');
+  g.addColorStop(1,  '#8bac0f');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+
+  // ── CLOUDS ──
+  C.clouds.forEach(cl=>{
+    cl.x -= cl.spd;
+    if(cl.x < -cl.w-10) cl.x = W+10;
+    drawCloud(ctx, Math.floor(cl.x), cl.y, cl.w);
+  });
+
+  // ── UPDATE SEGMENT CHAIN ──
+  const head = C.segs[0];
+  // Head moves right with sine wave Y
+  head.x += 1.05;
+  head.y = H/2 - 4 + Math.sin(C.tick * 0.055) * (H/2 - 16);
+  // Each segment chases the one ahead (inverse kinematics chain)
+  for(let i=1; i<C.segs.length; i++){
+    const a = C.segs[i-1], b = C.segs[i];
+    const dx = a.x - b.x, dy = a.y - b.y;
+    const d  = Math.sqrt(dx*dx + dy*dy) || 1;
+    const gap = 8;
+    if(d > gap){
+      const r = (d-gap)/d;
+      b.x += dx*r*0.55;
+      b.y += dy*r*0.55;
+    }
+  }
+  // Wrap whole dragon
+  if(head.x > W+80){
+    const off = head.x - (-100);
+    C.segs.forEach(s=>{ s.x -= off; });
+  }
+
+  // ── SPAWN GLITTERS ──
+  if(C.tick % 3 === 0){
+    // body shimmer from random segment
+    const si = 2 + Math.floor(Math.random()*(C.segs.length-4));
+    spawnGlitter(C.segs[si].x, C.segs[si].y, false);
+    // fire glitters from head
+    if(C.fireMode){
+      spawnGlitter(head.x+32, head.y, true);
+      spawnGlitter(head.x+28, head.y-4, true);
+      spawnGlitter(head.x+40, head.y+2, true);
+    }
+  }
+
+  // Fire timer
+  if(C.fireMode){
+    C.fireTick--;
+    if(C.fireTick <= 0) C.fireMode = false;
+  }
+
+  // ── DRAW GLITTERS ──
+  C.glitters = C.glitters.filter(g=>g.life>0);
+  C.glitters.forEach(g=>{
+    g.x+=g.vx; g.y+=g.vy; g.life--;
+    const a = Math.max(0, g.life/28);
+    ctx.globalAlpha = a;
+    const sz = g.size*2;
+    if(g.fire){
+      // fire ember: bright cross
+      ctx.fillStyle = GB.lite;
+      px(ctx,g.x-sz, g.y, sz*2+2, 2);
+      px(ctx,g.x,    g.y-sz, 2, sz*2+2);
+      ctx.fillStyle = GB.dark;
+      px(ctx,g.x, g.y, 2, 2);
+    } else {
+      // body shimmer: diamond
+      ctx.fillStyle = GB.lite;
+      px(ctx,g.x,    g.y-sz, 2, 2);
+      px(ctx,g.x-sz, g.y,    2, 2);
+      px(ctx,g.x+sz, g.y,    2, 2);
+      px(ctx,g.x,    g.y+sz, 2, 2);
+      ctx.fillStyle = '#d0e080';
+      px(ctx,g.x, g.y, 2, 2);
+    }
+    ctx.globalAlpha=1;
+  });
+
+  // ── DRAW DRAGON (tail→neck so head is on top) ──
+  // 1) Body + spine
+  for(let i=C.segs.length-1; i>=1; i--){
+    const s = C.segs[i];
+    if(s.x < -24 || s.x > W+24) continue;
+    const t = i/(C.segs.length-1); // 0=head,1=tail
+    const r = Math.round(2 + (1-t)*5); // taper: body r=7 → tail r=2
+    drawBodySeg(ctx, s.x, s.y, r, i);
+    drawSpine(ctx, s.x, s.y, i);
+    // Connector line between segments
+    const prev = C.segs[i-1];
+    if(prev.x>-24 && prev.x<W+24){
+      ctx.strokeStyle = GB.dark;
+      ctx.lineWidth = r*2;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(s.x, s.y);
+      ctx.lineTo(prev.x, prev.y);
+      ctx.stroke();
+    }
+  }
+
+  // 2) Wings (segment 7 and 8 from head)
+  if(C.segs[7] && C.segs[7].x > -24 && C.segs[7].x < W+24){
+    drawWing(ctx, C.segs[7].x, C.segs[7].y, C.tick, 1);   // top wing
+    drawWing(ctx, C.segs[8].x, C.segs[8].y, C.tick, -1);  // bottom wing
+  }
+
+  // 3) Head on top
+  if(head.x > -60 && head.x < W+20){
+    drawHead(ctx, head.x, head.y, C.fireMode);
+  }
+}
+
+function iguanaAlert(){
+  C.fireMode = true;
+  C.fireTick = 120;
+  // burst of fire glitters
+  for(let i=0;i<20;i++) spawnGlitter(C.segs[0].x+30, C.segs[0].y, true);
+}
+
+function mascotTap(){
+  playClk();
+  C.fireMode = true;
+  C.fireTick = 80;
+  const msgs=['COLD BLOODED!','HUNT THE ZONE!','NO SWEEP = NO TRADE','1% RISK ONLY!','A+ SETUPS ONLY!','STICK TO THE PLAN','PATIENCE WINS!','TRUST THE SYSTEM','BREATHE FIRE! 🔥'];
+  document.getElementById('mMsg').textContent = msgs[Math.floor(Math.random()*msgs.length)];
+}
+
+// ── SETTINGS ──
+function togSet(k){
+  playClk();
+  const el=document.getElementById('tog'+k);
+  const on=el.classList.contains('on');
+  el.classList.toggle('on',!on);el.classList.toggle('off',on);
+  if(k==='Snd')S.soundOn=!on;
+  if(k==='Coin')S.coinsOn=!on;
+}
+
+// ── CHECKLIST ──
+function chkToggle(row){
+  playClk();
+  const box=row.querySelector('.chbox'),txt=row.querySelector('.vt');
+  if(box.classList.contains('done')){
+    box.classList.remove('done');box.textContent='';
+    txt.style.textDecoration='';txt.className='vt c0';
+  }else{
+    box.classList.add('done');box.textContent='✓';
+    txt.style.textDecoration='line-through';txt.className='vt c1';
+  }
+}
+
+// ── CLOCK ──
+function updateClock(){
+  const pst=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Los_Angeles'}));
+  const h=pst.getHours(),m=pst.getMinutes();
+  document.getElementById('clk').textContent=String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+' PST';
+  const mins=h*60+m,sl=document.getElementById('sessLbl');
+  if(mins>=6*60+30&&mins<7*60)sl.textContent='▶ ORB';
+  else if(mins>=7*60&&mins<8*60+30)sl.textContent='★ PRIME';
+  else if(mins>=9*60&&mins<11*60)sl.textContent='☠ DEAD';
+  else if(mins>=11*60&&mins<13*60)sl.textContent='▶ PM';
+  else if(mins>=5*60&&mins<6*60+30)sl.textContent='◈ PREP';
+  else sl.textContent='◌ OFF';
+}
+
+// ── PRICE SIM ──
+function simPrices(){
+  const m=S.mkts;
+  m.ES.price+=(Math.random()-.48)*2;m.ES.chg+=(Math.random()-.48)*.5;
+  m.NQ.price+=(Math.random()-.48)*8;m.NQ.chg+=(Math.random()-.48)*2;
+  m.GC.price+=(Math.random()-.5)*1.5;m.GC.chg+=(Math.random()-.5)*.3;
+  document.getElementById('pES').textContent=m.ES.price.toFixed(0);
+  document.getElementById('pNQ').textContent=m.NQ.price.toFixed(0);
+  document.getElementById('pGC').textContent=m.GC.price.toFixed(1);
+  ['ES','NQ','GC'].forEach(k=>{
+    const c=S.mkts[k].chg;
+    document.getElementById('ch'+k).textContent=(c>=0?'▲+':'▼')+Math.abs(c).toFixed(1);
+  });
+}
+
+// ── AUTO ALERT ──
+function schedAuto(){
+  const delay=40000+Math.random()*50000;
+  setTimeout(()=>{
+    if(!S.alertActive&&S.page==='Main')fireAlert(ALERTS[Math.floor(Math.random()*ALERTS.length)]);
+    schedAuto();
+  },delay);
+}
+
+// ── SPARKLES ──
+function initSparkles(){
+  '✦★◆✸✺◈'.split('').forEach((c,i)=>{
+    const s=document.createElement('div');s.className='sparkle';s.textContent=c;
+    s.style.cssText=`left:${10+Math.random()*80}vw;top:${10+Math.random()*80}vh;color:rgba(100,220,100,0.4);animation-delay:${Math.random()*4}s;animation-duration:${3+Math.random()*3}s`;
+    document.body.appendChild(s);
+  });
+}
+
+// ── MATRIX RAIN ──
+function initMatrix(){
+  const canvas=document.getElementById('matrix-canvas');
+  if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  function resize(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;}
+  resize();
+  window.addEventListener('resize',resize);
+  const cols=Math.floor(window.innerWidth/18);
+  const drops=Array.from({length:cols},()=>Math.random()*-80);
+  function draw(){
+    ctx.fillStyle='rgba(0,0,0,0.04)';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    for(let i=0;i<drops.length;i++){
+      const bright=Math.random()>0.93;
+      ctx.font=(bright?'bold ':'')+'13px monospace';
+      ctx.fillStyle=bright?'#88ff88':'#22c55e';
+      ctx.globalAlpha=bright?0.85:0.38;
+      ctx.fillText(Math.random()>0.5?'1':'0', i*18, drops[i]*18);
+      if(drops[i]*18>canvas.height&&Math.random()>0.975)drops[i]=0;
+      drops[i]+=0.55;
+    }
+    ctx.globalAlpha=1;
+  }
+  setInterval(draw,55);
+}
+
+// ── INIT ──
+// ── WEBSOCKET — connects to local TradoGotchi server ──
+let wsConn = null;
+let wsUrl = 'ws://localhost:3000'; // default local
+
+function connectWS() {
+  try {
+    wsConn = new WebSocket(wsUrl);
+
+    wsConn.onopen = () => {
+      console.log('TradoGotchi connected to server ✅');
+      document.getElementById('ledLive').style.boxShadow = '0 0 8px #22c55e, 0 0 16px #22c55e';
+    };
+
+    wsConn.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === 'alert') {
+          // Map server fields to fireAlert format
+          fireAlert({
+            mkt:    data.market,
+            dir:    data.direction,
+            cont:   data.contract  || contractFor(data.market),
+            grade:  data.grade     || 'A',
+            ez:     data.entryZone || data.entry || 'See chart',
+            trig:   data.trigger   || 'Signal confirmed',
+            sl:     data.stop      || '--',
+            sln:    data.stopNote  || '',
+            t1:     data.t1        || '--',
+            t1n:    data.t1Note    || '→ move stop to BE',
+            t2:     data.t2        || '--',
+            t2n:    data.t2Note    || 'Full exit',
+            why:    data.why       || '✓ Signal confirmed',
+            rr:     data.rr        || '1:2',
+            atr:    data.atr       || '--',
+            news:   data.newsWarn  || false
+          });
+        } else if (data.type === 'connected') {
+          console.log('Server:', data.msg);
+        }
+      } catch(e) { console.error('WS parse error', e); }
+    };
+
+    wsConn.onclose = () => {
+      console.log('WS disconnected — retrying in 5s...');
+      document.getElementById('ledLive').style.boxShadow = 'none';
+      setTimeout(connectWS, 5000); // auto-reconnect
+    };
+
+    wsConn.onerror = () => {
+      // Silent fail — server not running yet
+      wsConn.close();
+    };
+  } catch(e) {}
+}
+
+function contractFor(mkt) {
+  return {ES:'MES · 1 CONTRACT', NQ:'MNQ · 1 CONTRACT', GC:'MGC · 1 CONTRACT'}[mkt] || '1 CONTRACT';
+}
+
+window.addEventListener('load',()=>{
+  initMatrix();
+  updateClock();
+  setInterval(sceneLoop, 50);
+  setInterval(updateClock,15000);
+  setInterval(simPrices,3500);
+  setTimeout(playBoot,500);
+  schedAuto();
+  connectWS(); // connect to webhook server
+  const pst=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Los_Angeles'}));
+  addFeed({mkt:'ES',dir:'LONG',grade:'A+',ez:'5,844–5,849'},pst);
+});
+</script>
+</body>
+</html>

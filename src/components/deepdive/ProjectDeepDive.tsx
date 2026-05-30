@@ -46,8 +46,8 @@ export default function ProjectDeepDive() {
                 </p>
                 <iframe
                   src={active.embed}
-                  title={`${active.name} live site`}
-                  className="h-[520px] w-full rounded-xl border border-[#1f1f1f] bg-black"
+                  title={`${active.name} live`}
+                  className="h-[600px] w-full rounded-xl border border-[#1f1f1f] bg-black"
                   loading="lazy"
                 />
               </div>

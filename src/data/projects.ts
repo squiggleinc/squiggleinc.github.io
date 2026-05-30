@@ -38,6 +38,7 @@ export const projects: Project[] = [
     ],
     tech: ["Node.js", "Express", "WebSockets", "TradingView", "Cloudflare Tunnel"],
     image: "/projects/tradogotchi.png",
+    embed: "/tradogotchi-app.html",
   },
   {
     slug: "mindfull-intel",
