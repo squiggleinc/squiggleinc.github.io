@@ -55,6 +55,7 @@ export const projects: Project[] = [
     ],
     tech: ["Python", "FastAPI", "Playwright", "BeautifulSoup", "pytrends", "SQLite", "APScheduler"],
     image: "/projects/mindfull.png",
+    scrollShot: "/projects/mindfull-tall.png",
   },
 ];
 

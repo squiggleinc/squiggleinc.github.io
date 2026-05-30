@@ -16,6 +16,16 @@
     animation: marquee 28s linear infinite;
   }
 
+  @keyframes autopan {
+    0%, 8%   { background-position: center top; }
+    50%      { background-position: center bottom; }
+    92%,100% { background-position: center top; }
+  }
+
+  .animate-autopan {
+    animation: autopan 16s ease-in-out infinite;
+  }
+
   .font-display {
     font-family: var(--font-display), Georgia, serif;
   }

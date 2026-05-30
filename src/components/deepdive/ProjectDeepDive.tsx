@@ -51,6 +51,19 @@ export default function ProjectDeepDive() {
                   loading="lazy"
                 />
               </div>
+            ) : active.scrollShot ? (
+              <div className="mt-6">
+                <p className="mb-2 flex items-center gap-2 font-mono text-[11px] uppercase tracking-widest text-[#a78bfa]">
+                  <span className="inline-block h-2 w-2 rounded-full bg-[#a78bfa]" />
+                  Live capture — auto-scrolling the real dashboard
+                </p>
+                <div
+                  role="img"
+                  aria-label={`${active.name} dashboard`}
+                  className="animate-autopan h-[460px] w-full rounded-xl border border-[#1f1f1f] bg-top bg-no-repeat"
+                  style={{ backgroundImage: `url(${active.scrollShot})`, backgroundSize: "100% auto" }}
+                />
+              </div>
             ) : (
               <Image
                 src={active.image}
