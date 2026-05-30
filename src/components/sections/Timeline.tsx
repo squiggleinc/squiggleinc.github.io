@@ -4,6 +4,7 @@ import { profile } from "@/data/profile";
 export default function Timeline() {
   return (
     <section id="journey" className="relative mx-auto max-w-3xl px-6 py-28">
+      <div className="rounded-3xl border border-white/10 bg-black/55 p-8 backdrop-blur-md md:p-12">
       <AnimateIn>
         <p className="font-mono text-xs uppercase tracking-widest text-[#a78bfa]">The journey</p>
         <h2 className="font-display gradient-text mt-2 text-5xl font-light tracking-tight">Milestones</h2>
@@ -19,6 +20,7 @@ export default function Timeline() {
             </div>
           </AnimateIn>
         ))}
+      </div>
       </div>
     </section>
   );

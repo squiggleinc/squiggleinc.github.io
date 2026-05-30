@@ -30,7 +30,7 @@ function Counter({ value, suffix }: { value: number; suffix?: string }) {
 export default function Stats() {
   return (
     <section className="relative mx-auto max-w-5xl px-6 py-20">
-      <div className="grid gap-10 text-center md:grid-cols-3">
+      <div className="grid gap-10 rounded-3xl border border-white/10 bg-black/55 p-10 text-center backdrop-blur-md md:grid-cols-3">
         {profile.stats.map((s) => (
           <div key={s.label}>
             <Counter value={s.value} suffix={s.suffix} />

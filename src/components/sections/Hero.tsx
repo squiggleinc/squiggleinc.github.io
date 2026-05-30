@@ -2,14 +2,12 @@
 
 import { motion } from "framer-motion";
 import Scene3D from "@/components/three/Scene3D";
-import WarpBackground from "@/components/effects/WarpBackground";
 import ShimmerButton from "@/components/effects/ShimmerButton";
 import { profile } from "@/data/profile";
 
 export default function Hero() {
   return (
-    <section id="top" className="relative flex min-h-screen items-center overflow-hidden bg-black">
-      <WarpBackground className="absolute inset-0" />
+    <section id="top" className="relative flex min-h-screen items-center overflow-hidden">
       <Scene3D className="absolute inset-0 opacity-90" />
       <div className="relative z-10 mx-auto w-full max-w-6xl px-6">
         <motion.p

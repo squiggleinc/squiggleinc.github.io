@@ -1,3 +1,4 @@
+import WarpBackground from "@/components/effects/WarpBackground";
 import { DeepDiveProvider } from "@/components/deepdive/DeepDiveContext";
 import ProjectDeepDive from "@/components/deepdive/ProjectDeepDive";
 import Nav from "@/components/sections/Nav";
@@ -13,6 +14,7 @@ import Footer from "@/components/sections/Footer";
 export default function Home() {
   return (
     <DeepDiveProvider>
+      <WarpBackground />
       <Nav />
       <main className="relative">
         <Hero />

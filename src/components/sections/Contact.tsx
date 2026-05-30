@@ -5,7 +5,7 @@ import { profile } from "@/data/profile";
 export default function Contact() {
   return (
     <section id="contact" className="relative mx-auto max-w-3xl px-6 py-32 text-center">
-      <AnimateIn>
+      <AnimateIn className="rounded-3xl border border-white/10 bg-black/55 p-10 backdrop-blur-md md:p-14">
         <h2 className="font-display gradient-text text-6xl font-light tracking-tight md:text-7xl">Let&apos;s build something.</h2>
         <p className="mt-5 text-lg text-[#c0c0c0]">
           Got an idea, a project, or just want to connect? My inbox is open.
