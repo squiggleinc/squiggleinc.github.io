@@ -43,3 +43,6 @@ next-env.d.ts
 # logo trace intermediates (throwaway)
 scripts/_mask.png
 scripts/_check.png
+
+# scratch screenshots from verify scripts
+/tg-deepdive.png
