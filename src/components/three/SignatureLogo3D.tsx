@@ -6,7 +6,7 @@ import { SVGLoader } from "three/examples/jsm/loaders/SVGLoader.js";
 import * as THREE from "three";
 
 // Final on-screen width of the signature, in world units.
-const TARGET_WIDTH = 4.6;
+const TARGET_WIDTH = 2.8;
 
 export default function SignatureLogo3D() {
   const tilt = useRef<THREE.Group>(null);
@@ -62,7 +62,7 @@ export default function SignatureLogo3D() {
   });
 
   return (
-    <group position={[1.5, -1.15, 0]}>
+    <group position={[2.75, 0.5, 0]}>
       <group ref={tilt}>
         <mesh geometry={geometry}>
           <meshPhysicalMaterial

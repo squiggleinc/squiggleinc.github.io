@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
@@ -7,6 +8,20 @@ import { useDeepDive } from "./DeepDiveContext";
 
 export default function ProjectDeepDive() {
   const { active, close } = useDeepDive();
+
+  // While a project modal is open, pause Lenis smooth-scroll so the modal's own
+  // overflow scrolls natively (otherwise Lenis eats the wheel and it cuts off).
+  useEffect(() => {
+    if (!active) return;
+    window.dispatchEvent(new Event("lenis:pause"));
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.dispatchEvent(new Event("lenis:resume"));
+      document.body.style.overflow = prev;
+    };
+  }, [active]);
+
   return (
     <AnimatePresence>
       {active && (
