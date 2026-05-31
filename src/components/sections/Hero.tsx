@@ -8,7 +8,8 @@ import { profile } from "@/data/profile";
 export default function Hero() {
   return (
     <section id="top" className="relative flex min-h-screen items-center overflow-hidden">
-      <Scene3D className="absolute inset-0 opacity-90" />
+      {/* gold signature is desktop-only — it doesn't fit on narrow phones */}
+      <Scene3D className="absolute inset-0 hidden opacity-90 md:block" />
       <div className="relative z-10 mx-auto w-full max-w-6xl px-6">
         <motion.p
           initial={{ opacity: 0, y: 20 }}
