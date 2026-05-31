@@ -86,6 +86,22 @@ export default function ProjectDeepDive() {
               ))}
             </ul>
 
+            {active.howItWorks && active.howItWorks.length > 0 && (
+              <>
+                <h3 className="mt-6 font-mono text-xs uppercase tracking-widest text-[#888888]">How it works</h3>
+                <ol className="mt-3 space-y-3">
+                  {active.howItWorks.map((step, i) => (
+                    <li key={step} className="flex gap-3 text-[#f0f0f0]/90">
+                      <span className="mt-0.5 flex h-6 w-6 flex-none items-center justify-center rounded-full border border-[#6d28d9]/50 font-mono text-xs text-[#a78bfa]">
+                        {i + 1}
+                      </span>
+                      <span>{step}</span>
+                    </li>
+                  ))}
+                </ol>
+              </>
+            )}
+
             <h3 className="mt-6 font-mono text-xs uppercase tracking-widest text-[#888888]">Built with</h3>
             <div className="mt-2 flex flex-wrap gap-2">
               {active.tech.map((t) => (

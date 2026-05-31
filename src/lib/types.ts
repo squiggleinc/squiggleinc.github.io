@@ -11,7 +11,8 @@ export interface Project {
   status: string;        // "Live", "Private", "In progress"
   problem: string;       // the idea / problem it solves
   features: string[];    // what it does (deep-dive bullets)
-  tech: string[];        // technologies
+  howItWorks?: string[]; // step-by-step of how it works under the hood
+  tech: string[];        // technologies / frameworks
   image: string;         // /projects/<slug>.png
   embed?: string;        // optional live URL to embed interactively in the deep-dive
   scrollShot?: string;   // optional tall screenshot that auto-pans (a "live" capture)
