@@ -10,8 +10,7 @@ import Home from "./page";
 describe("home page", () => {
   it("renders the name and all section anchors", () => {
     render(<Home />);
-    // "Vincent Sarkis" appears in both the nav wordmark and the hero headline.
-    expect(screen.getAllByText("Vincent Sarkis").length).toBeGreaterThan(0);
+    expect(screen.getByText("Vince Sarkis")).toBeInTheDocument();
     // "Squiggle" and "Mindfull Intel" appear in both the Projects grid and the
     // Timeline milestones, so assert at least one match rather than a unique one.
     expect(screen.getAllByText("Squiggle").length).toBeGreaterThan(0);

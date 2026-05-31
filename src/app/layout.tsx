@@ -20,7 +20,7 @@ const wordmark = Italiana({
 });
 
 export const metadata: Metadata = {
-  title: "Vincent Sarkis — Founder & Creator",
+  title: "Vince Sarkis — Founder & Creator",
   description:
     "Founder and creator bringing ideas to life. Builder of Squiggle, TradoGotchi, and Mindfull Intel.",
 };

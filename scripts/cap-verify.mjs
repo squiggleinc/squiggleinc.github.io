@@ -7,7 +7,7 @@ let url = null;
 for (const port of [3000, 3001, 3002, 3003]) {
   try {
     await p.goto(`http://localhost:${port}/`, { waitUntil: "load", timeout: 4000 });
-    if (/Vincent Sarkis/.test(await p.title())) { url = `http://localhost:${port}/`; break; }
+    if (/Vince/.test(await p.title())) { url = `http://localhost:${port}/`; break; }
   } catch {}
 }
 if (!url) { console.log("portfolio not found"); process.exit(1); }

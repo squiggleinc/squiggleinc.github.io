@@ -1,7 +1,7 @@
 import type { Profile } from "@/lib/types";
 
 export const profile: Profile = {
-  name: "Vincent Sarkis",
+  name: "Vince Sarkis",
   role: "Founder & Creator",
   tagline: "I bring ideas to life.",
   about: [
